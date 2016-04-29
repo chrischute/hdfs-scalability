@@ -41,22 +41,125 @@
 \begin{document}
 \maketitle
 \thispagestyle{empty}
+
 \begin{abstract}
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+% TODO: Complete after paper done.
 \end{abstract}
 \begin{multicols*}{2}
+
+% -------------------------------------------------
+
 \section{Introduction}
-Why do we use it?
-It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+
+% Introduce HDFS and the notion of Distributed FileSystems, their prevalence, etc
+% I.e. Some B.S. on what's out there to set the background
+
+% -------------------------------------------------
+
+\section{HDFS Architecture}
+
+% Describe the 5 Hadoop design principles (Perhaps move to Introduction)
+
+% Describe typical HDFS cluster: Single Namenode, Multiple Datanodes
+% The goal for decoupling metadata from actual data is scalability
+
+% Benefits of Single Namenode Architecture:
+% 1) Given an operation, all namespace operations run on single Namenode while expensive data transfers are distributed across Datanodes of cluster
+% 2) Simple durability scheme via replication of the same data block across Datanodes. 
+% 3) Same replication technique over independent Datanodes also enable a highly available system exploiting principles of MapReduce.
+
+\subsection{Namenode}
+
+% The entire metadata namespace is kept in memory. 
+% In-memory namespace keeps operations from external clients (get_block_locations, create_block) and internal communication (heartbeats, block reports) fast
+% File that maps UNIX-style inodes to data block locations in Datanodes
+% Write-Ahead log in stable storage
+
+\subsection{Datanode}
+
+% Stores file's data blocks
+% Periodic heartbeat to notify Namenode of its health (i.e. if it's running)
+% Periodic block reports to notify Namenode of a stored block's status (e.g. block write recieved)
 
 
-Where does it come from?
-Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
 
-The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.
+% Perhaps add section for how Read / Write operations are processed in HDFS? Might help describe the type of operations Namenode has to process.
+% E.g. Client Request Workflow for reading data
 
-Where can I get some?
-There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures, to generate Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.
+% -------------------------------------------------
+
+\section{Limitations of Single Namenode Architecture}
+
+\subsection{Physical Memory Size}
+
+% Re-iterate in-memory metadata namespace
+% Total File Capacity of Cluster is Limited by Name Node's RAM due to requirement that all metadata objects (file inodes and block) in memory at all times
+
+% SVENCHO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
+
+
+\subsection{Namenode CPU Bottleneck}
+
+% Describe the INTERNAL-LOAD communicating with Datanodes
+% # of Heartbeats that Namenode recieves is directly proportional to # of Datanodes in cluster
+% # of Block reports is also directly proportional to size of data blocks (i.e. ratio of blocks mapped per file) and also # of replicated copies per block
+% Physical data storage and data I/O performance increase proportionally to # of Datanodes in cluster and size of data blocks, but the overall performance of HDFS is also affected negatively by increased internal load.
+% The more time spend on internal load, less time spend on processing external client's requests
+
+
+% Describe the external-load from clients
+% All metadata operations run on Namenode - they cannot be processed anywhere else.
+% On every file read, there is a get_block_location per block per file
+% On every file write, there is a create_block per block per file
+% Namenode can become a bottleneck with operations that involve many metadata operations, e.g. batch-write operations will include many create_block requests
+
+% -------------------------------------------------
+
+\section{Performance Evaluation}
+
+% Discuss goals of tests (i.e. "we want to test Memory and CPU and determine blah")
+
+% Mention experimental setup (EC2, Java Test Skeleton, # nodes, etc)
+
+% FOR EACH EXPERIMENT:
+% Discuss designs of individual experiments and their results
+% What were the experiments testing?
+% What were the different parameters of the experiments?
+% Possibilities of error?
+
+\subsection{Experiment 1: Memory Experiments}
+
+% TODO: See above
+
+\subsection{Experiment 2: CPU Experiments}
+
+% TODO: See above
+
+\subsection{Analysis}
+
+% Discuss raw results independently for each experiment:
+% Are these results what was expected (and why)?
+% If there was some error, discuss what may have caused it
+% Graphs
+
+% Evaluate experimental results holistically to pinpoint the problem with HDFS's Single Namenode architecture (I.e. weigh CPU and Memory problems against each other)
+
+% -------------------------------------------------
+
+\section{Improvements to Single Namenode Architecture}
+
+% Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
+
+% -------------------------------------------------
+
+\section{Conclusion}
+
+% Wrap it up with stuff.
+
+
+
+
+
 \end{multicols*}
 \end{document}
 
