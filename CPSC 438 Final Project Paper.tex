@@ -133,11 +133,16 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 
 \subsection{Namenode CPU Bottleneck}
 
+The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that the NameNode operations are small enough and there will be few enough large files that they will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck. 
+
 % Describe the INTERNAL-LOAD communicating with Datanodes
 % # of Heartbeats that Namenode recieves is directly proportional to # of Datanodes in cluster
 % # of Block reports is also directly proportional to size of data blocks (i.e. ratio of blocks mapped per file) and also # of replicated copies per block
 % Physical data storage and data I/O performance increase proportionally to # of Datanodes in cluster and size of data blocks, but the overall performance of HDFS is also affected negatively by increased internal load.
 % The more time spend on internal load, less time spend on processing external client's requests
+
+The first potential source of CPU bottleneck is the internal-load of communication with the DataNodes. This internal-load can be created in two ways. First, internal-load can be created when the system holds a large amount of small files. The size of the block report sent by each DataNode is directly proportional to the number of blocks that the DataNode holds. Since each file is given its own virtual block, even if the file is much smaller than a block, the DataNode can potentially hold a great number of small files and have to send a large block report containing the metadata of each of these files. This could potentially overload the NameNode CPU. 
+Second, the number of block reports that a NameNode receives is directly proportional to the number of DataNodes in the system. So, if the system has a large number of DataNodes, it is possible to generate a large amount of internal load by having many DataNodes.  
 
 
 % Describe the external-load from clients
@@ -147,6 +152,10 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 % Namenode can become a bottleneck with operations that involve many metadata operations, e.g. batch-write operations will include many create_block requests
 
 % -------------------------------------------------
+
+Another potential source of CPU bottleneck is external-load from clients querying the NameNode. As explained above, on both reads and writes a client must first contact the NameNode to find the appropriate block locations and DataNodes for the read or write. The NameNode then has to perform a metadata operation to determine what to return to the client. So, the NameNode can become a bottleneck if there are many clients trying to perform operations concurrently since they all must access the metadata via the NameNode. This should be an especially prevalent problem when there are many small files because it would be likely that the use pattern of a system with many small files would be for there to be many clients each trying to access their files concurrently. 
+
+So, with these potential CPU bottlenecks in mind, we pose the question of whether it is possible to generate an appropriate load so as to reach these CPU bottlenecks before the NameNode runs out of memory. This will be addressed by out experiments. 
 
 \section{Performance Evaluation}
 
@@ -184,6 +193,8 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
 
 % -------------------------------------------------
+
+% Would it be helpful to remove the assumption that each file is assigned to its own block?
 
 \section{Conclusion}
 
