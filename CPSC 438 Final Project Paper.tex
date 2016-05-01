@@ -79,7 +79,7 @@ This single NameNode architecture is beneficial in a few ways. First, this facil
 
 Now we will examine certain aspects of the specific HDFS architecture in more detail. 
 
-\subsection{NameNode}
+\subsection{NameNode and DataNodes}
 
 % The entire metadata namespace is kept in memory. 
 % In-memory namespace keeps operations from external clients (get_block_locations, create_block) and internal communication (heartbeats, block reports) fast
@@ -91,7 +91,7 @@ All metadata is kept in memory on the NameNode. As explained above, the metadata
 Clearly durability of the NameNode is very important to the system. There are various schemes to ensure a durable NameNode. A write ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintain a copy of the NameNode. 
 
 
-\subsection{DataNode}
+%\subsection{DataNode}
 
 % Stores file's data blocks
 % Periodic heartbeat to notify Namenode of its health (i.e. if it's running)
@@ -107,10 +107,12 @@ Clearly durability of the NameNode is very important to the system. There are va
 
 % -------------------------------------------------
 
-Files in HDFS are append-only and can only be written to by a single writer at a time so that once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes to write to and which blocks to write to on those DataNodes. Then, the client will ensure a replicated write by sending data in TCP-style packets through a pipeline including all DataNodes over which the file will be replicated. This guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then
+Files in HDFS are append-only and can only be written to by a single writer at a time so that once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes to write to and which blocks to write to on those DataNodes. Then, the client will ensure a replicated write by sending data in TCP-style packets through a pipeline including all DataNodes over which the file will be replicated. This guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then, the client reads from the closest available DataNode directly. 
 
 
 \section{Limitations of Single Namenode Architecture}
+
+Despite the benefits of the single NameNode architecture listed above, this architectural decision causes some potentially major scalability problems. 
 
 \subsection{Physical Memory Size}
 
@@ -118,6 +120,9 @@ Files in HDFS are append-only and can only be written to by a single writer at a
 % Total File Capacity of Cluster is Limited by Name Node's RAM due to requirement that all metadata objects (file inodes and block) in memory at all times
 
 % SVENCHO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
+
+
+
 
 
 \subsection{Namenode CPU Bottleneck}
