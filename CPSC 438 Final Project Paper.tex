@@ -112,7 +112,7 @@ Files in HDFS are append-only and can only be written to by a single writer at a
 
 \section{Limitations of Single Namenode Architecture}
 
-Despite the benefits of the single NameNode architecture listed above, this architectural decision causes some potentially major scalability problems. 
+Despite the benefits of the single NameNode architecture listed above, this architectural decision causes some potentially major scalability problems. These problems will be especially pronounced when HDFS is used to store many small files as opposed to few large files. 
 
 \subsection{Physical Memory Size}
 
@@ -122,7 +122,13 @@ Despite the benefits of the single NameNode architecture listed above, this arch
 % SVENCHO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
 
 
+The obvious problem with forcing all metadata to be in memory on the NameNode is that the NameNode will run out of available memory. %todo cite Shvanko
 
+Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the number of blocks allocated to each file, and $ F $ be the number of files on the system. Also, let $ c $ be the number of bytes to represent a single block mapping to all replicas of a block, and $ i $ the number of bytes to represent and inode. Then, it is clear that we must have 
+\begin{align*}
+	M > \lambda c F + i F
+\end{align*}
+	if we want to fit all metadata in memory. This limit is much easier to reach with small files since each file is allocated its own virtual block, no matter how small the file is, ie we have that $ \lambda \geq 1$. So, creating many small files should take up $ c + i$ bytes for each additional file, while growing a file by a similar amount will use at most $ c $ bytes. Thus, the memory limit is much more of a problem for many small files. 
 
 
 \subsection{Namenode CPU Bottleneck}
