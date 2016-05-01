@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  1 MAY 2016 14:21
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  1 MAY 2016 16:30
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -241,7 +241,7 @@ Package: multicol 2015/03/31 v1.8m multicolumn formatting (FMi)
 \f@ncyO@erf=\skip61
 \f@ncyO@olf=\skip62
 \f@ncyO@orf=\skip63
-) (/Users/David/CPSC_438_Final_Project/.texpadtmp/CPSC 438 Final Project Paper.aux)
+) (/Users/christopherchute/Documents/Junior Year Documents/CPSC_438_Final_Project/.texpadtmp/CPSC 438 Final Project Paper.aux)
 \openout1 = `"CPSC 438 Final Project Paper.aux"'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 41.
@@ -346,17 +346,17 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 42.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
-{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] (/Users/David/CPSC_438_Final_Project/.texpadtmp/CPSC 438 Final Project Paper.aux) ) 
+{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] (/Users/christopherchute/Documents/Junior Year Documents/CPSC_438_Final_Project/.texpadtmp/CPSC 438 Final Project Paper.aux) ) 
 Here is how much of TeX's memory you used:
  3813 strings out of 493089
- 51646 string characters out of 6134842
+ 51949 string characters out of 6134842
  127536 words of memory out of 5000000
  7224 multiletter control sequences out of 15000+600000
  16818 words of font info for 47 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  38i,10n,43p,1080b,382s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/local/texlive/2015/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}</usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/public/cm-super/sfsl1095.pfb>
-Output written on "/Users/David/CPSC_438_Final_Project/.texpadtmp/CPSC 438 Final Project Paper.pdf" (3 pages, 144939 bytes).
+Output written on "/Users/christopherchute/Documents/Junior Year Documents/CPSC_438_Final_Project/.texpadtmp/CPSC 438 Final Project Paper.pdf" (3 pages, 145405 bytes).
 PDF statistics:
  55 PDF objects out of 1000 (max. 8388607)
  39 compressed objects within 1 object stream
