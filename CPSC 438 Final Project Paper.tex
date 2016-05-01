@@ -65,14 +65,14 @@ Hadoop claims to be built on five core principles that govern the architectural 
 % Describe typical HDFS cluster: Single Namenode, Multiple Datanodes
 % The goal for decoupling metadata from actual data is scalability
 
-To satisfy these principles, the HDFS architecture was designed as follows. 
+To satisfy these principles, the HDFS architecture was designed as follows. An HDFS cluster will have one unique NameNode and many DataNodes. Briefly, the NameNode holds the metadata of each file in the system. This metadata consists of (inode, mapping) pairs where the inode is a unix-style inode representing the file and the mapping holds the information about where the file resides in disk on the DataNodes. The NameNode holds all of this metadata in memory to facilitate fast metadata operations. 
 
 % Benefits of Single Namenode Architecture:
 % 1) Given an operation, all namespace operations run on single Namenode while expensive data transfers are distributed across Datanodes of cluster
 % 2) Simple durability scheme via replication of the same data block across Datanodes. 
 % 3) Same replication technique over independent Datanodes also enable a highly available system exploiting principles of MapReduce.
 
-
+This single NameNode architecture is beneficial in a few ways. First, this facilitates large reads since the reads are distributed among the DataNodes and the relatively inexpensive metadata operations all happen on the NameNode and never block each other. If each node had to handle its own metadata operations, transactions accessing unrelated data could be forced to wait 
 
 \subsection{Namenode}
 
@@ -194,3 +194,4 @@ To satisfy these principles, the HDFS architecture was designed as follows.
 
 
 
+ ``
