@@ -65,23 +65,31 @@ Hadoop claims to be built on five core principles that govern the architectural 
 % Describe typical HDFS cluster: Single Namenode, Multiple Datanodes
 % The goal for decoupling metadata from actual data is scalability
 
-To satisfy these principles, the HDFS architecture was designed as follows. An HDFS cluster will have one unique NameNode and many DataNodes. Briefly, the NameNode holds the metadata of each file in the system. This metadata consists of (inode, mapping) pairs where the inode is a unix-style inode representing the file and the mapping holds the information about where the file resides in disk on the DataNodes. The NameNode holds all of this metadata in memory to facilitate fast metadata operations. 
+To satisfy these principles, the HDFS architecture was designed as follows. An HDFS cluster will have one unique NameNode and many DataNodes. Briefly, the NameNode holds the metadata of each file in the system. This metadata consists of (inode, mapping) pairs where the inode is a UNIX-style inode representing the file and the mapping holds the information about where the file resides in disk on the DataNodes. The NameNode holds all of this metadata in memory to facilitate fast metadata operations. 
 
 % Benefits of Single Namenode Architecture:
 % 1) Given an operation, all namespace operations run on single Namenode while expensive data transfers are distributed across Datanodes of cluster
 % 2) Simple durability scheme via replication of the same data block across Datanodes. 
+%TODO What does 3 mean here?
 % 3) Same replication technique over independent Datanodes also enable a highly available system exploiting principles of MapReduce.
 
-This single NameNode architecture is beneficial in a few ways. First, this facilitates large reads since the reads are distributed among the DataNodes and the relatively inexpensive metadata operations all happen on the NameNode and never block each other. If each node had to handle its own metadata operations, transactions accessing unrelated data could be forced to wait 
+This single NameNode architecture is beneficial in a few ways. First, this facilitates large reads since the reads are distributed among the DataNodes and the relatively inexpensive metadata operations all happen on the NameNode and never block each other. If each node had to handle its own metadata operations, the metadata operation to indicate which node to read from could be slowed by threads performing large data operations at the node being queried. Second, a single NameNode architecture allows for a simple durability scheme via replication of each block of data across many DataNodes and organized by the central NameNode. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
 
-\subsection{Namenode}
+Now we will examine certain aspects of the specific HDFS architecture in more detail. 
+
+\subsection{NameNode}
 
 % The entire metadata namespace is kept in memory. 
 % In-memory namespace keeps operations from external clients (get_block_locations, create_block) and internal communication (heartbeats, block reports) fast
 % File that maps UNIX-style inodes to data block locations in Datanodes
 % Write-Ahead log in stable storage
 
-\subsection{Datanode}
+All metadata is kept in memory on the NameNode. As explained above, the metadata holds a UNIX-style inode and location on DataNodes for each file. These locations are represented as block locations in virtual memory of each of the DataNodes. So, upon creation of a file, the NameNode will allocate a block for the file in virtual memory on however many DataNodes the file will be replicated across (the default is 3 replicas). Then, the NameNode is responsible to pointing clients to the appropriate blocks to write or read files, and also to maintain the namespace. The NameNode keeps these maps to data blocks up to date by communicating with the DataNodes via heartbeats. The DataNodes are responsible for sending periodic heartbeats to indicate that they are functioning correctly that contain block reports. The block report  
+
+Clearly durability of the NameNode is very important to the system. There are various schemes to ensure a durable NameNode. A write ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintain a copy of the NameNode. 
+
+
+\subsection{DataNode}
 
 % Stores file's data blocks
 % Periodic heartbeat to notify Namenode of its health (i.e. if it's running)
@@ -89,6 +97,7 @@ This single NameNode architecture is beneficial in a few ways. First, this facil
 
 
 
+\subsection{Reads and Writes in HDFS}
 % Perhaps add section for how Read / Write operations are processed in HDFS? Might help describe the type of operations Namenode has to process.
 % E.g. Client Request Workflow for reading data
 
