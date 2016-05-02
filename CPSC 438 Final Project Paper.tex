@@ -63,22 +63,6 @@ This paper examines Hadoop Distributed File System (HDFS), a module of the Apach
 
 % Describe the 5 Hadoop design principles (Perhaps move to Introduction)
 
-Hadoop is built on five core principles that govern the architectural decisions. These are (1) assuming hardware failure is the norm. As a result, HDFS wants to be highly reliable in the face of hardware failure so the architecture incorporates replication of data across multiple nodes. Then HDFS wants to (2) allow streaming data access and (3) support very large data sets. With these goals in mind, HDFS wants to use a distributed system to accommodate large files and implement distributed reads to prevent streaming access from clogging the system. Next HDFS wants to (4) provide simple concurrency control with a write-once read-many model. This is less a feature and more a decision to weigh reads over writes by providing highly available and concurrent reads at the expense of allowing concurrent writes. And lastly, HDFS wants (5) portability, to work indiscriminately on different computer architectures.
-
-HDFS's key characteristic is in how it decouples metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
-
-The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5.
-
-
-% -------------------------------------------------
-
-\section{HDFS Architecture}
-
-%TODO figures???
-
-<<<<<<< Updated upstream
-% Describe the 5 Hadoop design principles (Perhaps move to Introduction)
-
 The architecture of HDFS is designed with the following goals in mind:
 \begin{enumerate}[noitemsep, label=\arabic*.]
 	\item\textit{Support regular hardware failure.} This is accomplished primarily through replication of data across multiple DataNodes.
@@ -88,7 +72,15 @@ The architecture of HDFS is designed with the following goals in mind:
 	\item\textit{Run everywhere (portability).} HDFS runs on top of the Java Virtual Machine, which provides nearly universal portability.
 \end{enumerate}
 
+HDFS's key characteristic is in how it decouples metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
 
+The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5.
+
+
+% -------------------------------------------------
+
+\section{HDFS Architecture}
+%TODO figures???
 % Describe typical HDFS cluster: Single NameNode, Multiple DataNodes
 % The goal for decoupling metadata from actual data is scalability
 
@@ -96,12 +88,6 @@ With these principles in mind, the HDFS architecture is designed as follows. An 
 
 % TODO: Say which section the linear block result is presented in.
 Each file is partitioned into one or more blocks, and each block is replicated across multiple DataNodes. The mapping for a file maps each block of the file to a list of DataNodes where the block is replicated. As presented below, the metadata associated with each file scales linearly with the number of blocks in each file. That is, there is a fixed size mapping for each block in the file. The NameNode holds all of this metadata in memory to facilitate fast metadata operations.
-=======
-% Describe typical HDFS cluster: Single Namenode, Multiple Datanodes
-% The goal for decoupling metadata from actual data is scalability
-
-In a standard Hadoop ecosystem, the HDFS cluster is comprised of one unique NameNode and many DataNodes. The NameNode holds the metadata of each file in the system. This metadata consists of (inode, mapping) pairs where the inode is a UNIX-style inode representing the file and the mapping holds the information about where the file resides in disk on the DataNodes. Also included in the metadata are filesystem properties such as permissions and ownership per directory or file as well as HDFS attributes such as quotas and replication factors. The NameNode holds all of this metadata in memory to facilitate fast metadata operations. 
->>>>>>> Stashed changes
 
 % Benefits of Single Namenode Architecture:
 % 1) Given an operation, all namespace operations run on single Namenode while expensive data transfers are distributed across Datanodes of cluster
@@ -117,7 +103,6 @@ Now we will examine certain aspects of the specific HDFS architecture in more de
 % In-memory namespace keeps operations from external clients (get_block_locations, create_block) and internal communication (heartbeats, block reports) fast
 % File that maps UNIX-style inodes to data block locations in Datanodes
 % Write-Ahead log in stable storage
-
 All metadata is kept in memory on the NameNode. As explained above, the metadata holds a UNIX-style inode and location on DataNodes for each file. These locations are represented as block locations in virtual memory of each of the DataNodes. Meaning that upon creation of a file, the NameNode will allocate a block for the file in virtual memory on however many DataNodes the file will be replicated across (the default is 3 replicas). Then, the NameNode is responsible for pointing the clients to the appropriate blocks to write or read files, and also maintaining the namespace. The NameNode keeps the maps to data blocks up-to-date by communicating with the DataNodes via ``heartbeats" (i.e., TCP packets). The DataNodes are responsible for sending periodic heartbeats that contain block reports to indicate that they are functioning correctly and can be reached along the network. The block report gives the block locations of all files in the virtual memory of that DataNode. The NameNode uses this information to ensure each block is replicated enough times and keep the locations of the blocks up to date. 
 
 Clearly durability of the NameNode is very important to the system. There are various schemes to ensure a durable NameNode. A write ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintains a copy of the NameNode. 
