@@ -70,18 +70,19 @@ The architecture of HDFS is designed with the following goals in mind:
 \end{enumerate}
 
 
-% Describe typical HDFS cluster: Single Namenode, Multiple Datanodes
+% Describe typical HDFS cluster: Single NameNode, Multiple DataNodes
 % The goal for decoupling metadata from actual data is scalability
 
-To satisfy these principles, the HDFS architecture was designed as follows. An HDFS cluster consists of a single NameNode and many DataNodes. Briefly, the NameNode holds the metadata of each file in the system. This metadata consists of (inode, mapping) pairs where the inode is a UNIX-style inode representing the file and the mapping holds the information about where the file resides in disk on the DataNodes. Also included in the metadata are filesystem properties such as permissions and ownership per directory or file as well as HDFS attributes such as quotas and replication factors. The NameNode holds all of this metadata in memory to facilitate fast metadata operations. 
+With these principles in mind, the HDFS architecture is designed as follows. An HDFS cluster consists of a single NameNode and many DataNodes. Briefly, the NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, an HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
+
+% TODO: Say which section the linear block result is presented in.
+Each file is partitioned into one or more blocks, and each block is replicated across multiple DataNodes. The mapping for a file maps each block of the file to a list of DataNodes where the block is replicated. As presented below, the metadata associated with each file scales linearly with the number of blocks in each file. That is, there is a fixed size mapping for each block in the file. The NameNode holds all of this metadata in memory to facilitate fast metadata operations.
 
 % Benefits of Single Namenode Architecture:
 % 1) Given an operation, all namespace operations run on single Namenode while expensive data transfers are distributed across Datanodes of cluster
-% 2) Simple durability scheme via replication of the same data block across Datanodes. 
-%TODO What does 3 mean here?
-% 3) Same replication technique over independent Datanodes also enable a highly available system exploiting principles of MapReduce.
-
-This single NameNode architecture is beneficial in a few ways. First, this facilitates large reads since the reads are distributed among the DataNodes and the relatively inexpensive metadata operations all happen on the NameNode and never block each other. If each node had to handle its own metadata operations, the metadata operation to indicate which node to read from could be slowed by threads performing large data operations at the node being queried. Second, a single NameNode architecture allows for a simple durability scheme via replication of each block of data across many DataNodes organized by the central NameNode. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
+% 2) Simple durability scheme via replication of the same data block across Datanodes.
+% 3) Same replication technique over independent DataNodes also enable a highly available system exploiting principles of MapReduce.
+A single NameNode is used primarily to simplify the architecture of HDFS. Since all metadata First, metadata operations are relatively inexpensive compared to the I/O-intensive operations performed on DataNodes. Thus it is likely that  NameNode and never block each other. If each node had to handle its own metadata operations, the metadata operation to indicate which node to read from could be slowed by threads performing large data operations at the node being queried. Second, a single NameNode architecture allows for a simple durability scheme via replication of each block of data across many DataNodes organized by the central NameNode. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
 
 Now we will examine certain aspects of the specific HDFS architecture in more detail. 
 
