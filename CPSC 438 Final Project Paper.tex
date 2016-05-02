@@ -91,12 +91,9 @@ Each file is partitioned into one or more blocks, and each block is replicated a
 % 1) Given an operation, all namespace operations run on single Namenode while expensive data transfers are distributed across Datanodes of cluster
 % 2) Simple durability scheme via replication of the same data block across Datanodes.
 % 3) Same replication technique over independent DataNodes also enable a highly available system exploiting principles of MapReduce.
-A single NameNode is used primarily to simplify the architecture and metadata management of HDFS. For instance, having a single NameNode makes it simpler to maintain consistency in the file system. A single NameNode architecture also allows for simple, centrally organized replication of each block of data across many DataNodes. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
-
-Now we will examine certain aspects of the specific HDFS architecture in more detail. 
+A single NameNode is used primarily to simplify the architecture and metadata management of HDFS. For instance, having a single NameNode makes it simpler to maintain consistency in the file system. A single NameNode architecture also allows for simple, centrally organized replication of each block across many DataNodes. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
 
 \subsection{NameNode and DataNodes}
-
 % The entire metadata namespace is kept in memory. 
 % In-memory namespace keeps operations from external clients (get_block_locations, create_block) and internal communication (heartbeats, block reports) fast
 % File that maps UNIX-style inodes to data block locations in Datanodes
