@@ -93,12 +93,11 @@ Each file is partitioned into one or more blocks, and each block is replicated a
 % 3) Same replication technique over independent DataNodes also enable a highly available system exploiting principles of MapReduce.
 A single NameNode is used primarily to simplify the architecture and metadata management of HDFS. For instance, having a single NameNode makes it simpler to maintain consistency in the file system. A single NameNode architecture also allows for simple, centrally organized replication of each block across many DataNodes. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
 
-\subsection{NameNode and DataNodes}
 % The entire metadata namespace is kept in memory. 
 % In-memory namespace keeps operations from external clients (get_block_locations, create_block) and internal communication (heartbeats, block reports) fast
 % File that maps UNIX-style inodes to data block locations in Datanodes
 % Write-Ahead log in stable storage
-All metadata is kept in memory on the NameNode. As explained above, the metadata holds a UNIX-style inode and location on DataNodes for each file. These locations are represented as block locations in virtual memory of each of the DataNodes. Meaning that upon creation of a file, the NameNode will allocate a block for the file in virtual memory on however many DataNodes the file will be replicated across (the default is 3 replicas). Then, the NameNode is responsible for pointing the clients to the appropriate blocks to write or read files, and also maintaining the namespace. The NameNode keeps the maps to data blocks up-to-date by communicating with the DataNodes via ``heartbeats" (i.e., TCP packets). The DataNodes are responsible for sending periodic heartbeats that contain block reports to indicate that they are functioning correctly and can be reached along the network. The block report gives the block locations of all files in the virtual memory of that DataNode. The NameNode uses this information to ensure each block is replicated enough times and keep the locations of the blocks up to date. 
+All metadata is kept in memory on the NameNode. Given a file of size $F$ and a block size $B$, the file will be partitioned into $n = \lceil F/B\rceil$ blocks. Upon creation of the file, the NameNode replicates each of the $n$ blocks across $R$ DataNodes, where $R$ is the \textit{replication factor} of the cluster. Then, the NameNode is responsible for pointing the clients to the appropriate blocks to write or read files, and also maintaining the namespace. The NameNode keeps the maps to data blocks up-to-date by communicating with the DataNodes via ``heartbeats" (i.e., TCP packets). The DataNodes are responsible for sending periodic heartbeats that contain block reports to indicate that they are functioning correctly and can be reached along the network. The block report gives the block locations of all files in the virtual memory of that DataNode. The NameNode uses this information to ensure each block is replicated enough times and keep the locations of the blocks up to date. 
 
 Clearly durability of the NameNode is very important to the system. There are various schemes to ensure a durable NameNode. A write ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintains a copy of the NameNode. 
 
@@ -127,12 +126,9 @@ Files in HDFS are append-only and can only be written to by a single writer at a
 Despite the benefits of the single NameNode architecture listed above, this architectural decision causes some potentially major scalability problems. These problems will be especially pronounced when HDFS is used to store many small files as opposed to few large files (although many large files will also prove difficult HDFS). 
 
 \subsection{Physical Memory Size}
-
 % Re-iterate in-memory metadata namespace
 % Total File Capacity of Cluster is Limited by Name Node's RAM due to requirement that all metadata objects (file inodes and block) in memory at all times
-
 % SVENCHO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
-
 
 The obvious problem with forcing all metadata to be in memory on the NameNode is that the NameNode will run out of available memory. %todo cite Shvanko
 
@@ -142,9 +138,7 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 \end{align*}
 	This limit is much easier to reach with small files since each file is allocated its own virtual block, no matter how small the file is, i.e. we have that $ \lambda \geq 1$. This means that creating many small files should take up $ c + i$ bytes for each additional file, while growing a file by a similar amount will use at most $ c $ bytes. Thus, the memory limit is much more of a problem for many small files. 
 
-
 \subsection{Namenode CPU Bottleneck}
-
 The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that the NameNode operations are small enough and there will be few enough large files that they will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck. 
 
 % Describe the INTERNAL-LOAD communicating with Datanodes
