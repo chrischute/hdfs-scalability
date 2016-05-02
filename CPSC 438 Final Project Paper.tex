@@ -99,31 +99,23 @@ A single NameNode is used primarily to simplify the architecture and metadata ma
 % Write-Ahead log in stable storage
 All metadata is kept in memory on the NameNode. Given a file of size $F$ and a block size $B$, the file will be partitioned into $n = \lceil F/B\rceil$ blocks. Upon creation of the file, the NameNode replicates each of the $n$ blocks across $R$ DataNodes, where $R$ is the \textit{replication factor} of the cluster. Once the file is created, the NameNode is responsible for pointing read or append requests to the appropriate blocks on the DataNodes. The NameNode keeps the block mappings up-to-date by communicating with the DataNodes via \textit{block reports} carried in periodic heartbeats from each DataNode. A heartbeat also indicates that a DataNode is functioning correctly and has a working network connection. The NameNode uses this information to ensure each block is replicated over $R$ DataNodes, issuing replication commands if needed.
 
-Durability of the NameNode is critical to the availability of HDFS. There are various schemes to ensure a durable NameNode. A write ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintains a copy of the NameNode. 
-
-
+Durability of the NameNode is critical to the availability of HDFS. There are various schemes to ensure a durable NameNode. A write-ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintains a copy of the NameNode. By default, the NameNode is a single point of failure for an HDFS cluster, and reconstructing the NameNode after failure involves sending 
 %\subsection{DataNode}
 
 % Stores file's data blocks
 % Periodic heartbeat to notify Namenode of its health (i.e. if it's running)
 % Periodic block reports to notify Namenode of a stored block's status (e.g. block write recieved)
 
-%TODO cut this section/ merge with above?
-
-
-
-\subsection{Reads and Writes in HDFS}
 % Perhaps add section for how Read / Write operations are processed in HDFS? Might help describe the type of operations Namenode has to process.
 % E.g. Client Request Workflow for reading data
 
 % -------------------------------------------------
 
-Files in HDFS are append-only and can only be written to by a single writer at a time so that once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes and blocks to write. Then, the client will ensure a replicated write by sending data in TCP-style packets through a pipeline including all DataNodes over which the file will be replicated. This guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then, the client reads from the closest available DataNodes directly. 
+Files in HDFS are append-only and can only be written to by a single writer at a time so that once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes and blocks to write. Then, the client will ensure a replicated write by sending packets of data through a pipeline of TCP connections. This pipeline includes all DataNodes over which the file will be replicated, which guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then, the client reads from the closest available DataNodes directly.
 
+\section{Limitations of Single-NameNode Architecture}
 
-\section{Limitations of Single Namenode Architecture}
-
-Despite the benefits of the single NameNode architecture listed above, this architectural decision causes some potentially major scalability problems. These problems will be especially pronounced when HDFS is used to store many small files as opposed to few large files (although many large files will also prove difficult HDFS). 
+Despite the benefits of having only a single NameNode, this architectural decision causes some potentially major scalability problems. These problems will be especially pronounced when HDFS is used to store many small files as opposed to few large files. In particular, small files produce more metadata relative to their content size, which quickly exhausts the available memory of the NameNode.
 
 \subsection{Physical Memory Size}
 % Re-iterate in-memory metadata namespace
@@ -137,14 +129,28 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 	M > \lambda c F + i F
 \end{align*}
 	This limit is much easier to reach with small files since each file is allocated its own virtual block, no matter how small the file is, i.e. we have that $ \lambda \geq 1$. This means that creating many small files should take up $ c + i$ bytes for each additional file, while growing a file by a similar amount will use at most $ c $ bytes. Thus, the memory limit is much more of a problem for many small files. 
+	
+DAVE TALK ABOUT THE MAXIMUM WE CAN STORE GIVEN FILE SIZE, ETC.
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{variableBlockSize}	
+\end{center}
+
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logScale}	
+\end{center}
+
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logLogScale}	
+\end{center}
+	
 
 \subsection{Namenode CPU Bottleneck}
 The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that the NameNode operations are small enough and there will be few enough large files that they will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck. 
 
-% Describe the INTERNAL-LOAD communicating with Datanodes
-% # of Heartbeats that Namenode recieves is directly proportional to # of Datanodes in cluster
+% Describe the INTERNAL-LOAD communicating with DataNodes
+% # of Heartbeats that NameNode receives is directly proportional to # of DataNodes in cluster
 % # of Block reports is also directly proportional to size of data blocks (i.e. ratio of blocks mapped per file) and also # of replicated copies per block
-% Physical data storage and data I/O performance increase proportionally to # of Datanodes in cluster and size of data blocks, but the overall performance of HDFS is also affected negatively by increased internal load.
+% Physical data storage and data I/O performance increase proportionally to # of DataNodes in cluster and size of data blocks, but the overall performance of HDFS is also affected negatively by increased internal load.
 % The more time spend on internal load, less time spend on processing external client's requests
 
 The first potential source of CPU bottleneck is the internal-load of communication with the DataNodes. This internal-load can be created in two ways. First, internal-load can be created when the system holds a large amount of small files. The size of the block report sent by each DataNode is directly proportional to the number of blocks that the DataNode holds. Since each file is given its own virtual block, even if the file is much smaller than a block, the DataNode can potentially hold a great number of small files and have to send a large block report containing the metadata of each of these files. This could potentially overload the NameNode CPU. 
