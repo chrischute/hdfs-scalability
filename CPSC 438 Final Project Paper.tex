@@ -43,20 +43,31 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-	This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. This architecture presents other theoretical bottlenecks, including CPU load on the NameNode from storing many small files. For example, both high-frequency requests and heartbeats with small files require higher NameNode CPU usage. In this paper we model and provide experimental evidence for the NameNode memory bottleneck. We compare this to proposed CPU bottlenecks, and we find that the memory bottleneck is the dominant issue. We provide suggestions for future work on HDFS scalability limits.
+% TODO: Complete after paper done.
 \end{abstract}
 \begin{multicols*}{2}
 
-% -------------------------------------------------
 
 \section{Introduction}
 
 % Introduce HDFS and the notion of Distributed FileSystems, their prevalence, etc
 % I.e. Some B.S. on what's out there to set the background
 
+Distributed file systems (DFS), also known as network file systems, stores remote files in a format accessible with the same semantics as a local filesystem. It offers a transparent interface for handling files and directories, abstracting features like access control, recovery and concurrency. DFS offers a scalable mechanism for creating logical filesystems shared by many clients.
+
+The DFS architecture has many advantages; it offers a unified hierarchical namespace for shared files and folders, location transparency in physical data placement, load balancing across nodes, storage scalability via expanding clusters, increased availability through distributed data, and fault tolerance by replication across racks.
+
+Many DFS implementations exist today. Each system differs in their performance, data mutability, handling of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFS like Hadoop Distributed File System.
+
+This paper examines Hadoop Distributed File System (HDFS) implemented in Java. HDFS is a distributed filesystem focused on scability and portability. HDFS is not fully POSIX-compliant since HDFS is designed for handling large files terabytes in size. It trades the functionality such as mutable files for increased data throughput and non-POSIX operations such as appending.
+
+    
+
 % -------------------------------------------------
 
 \section{HDFS Architecture}
+
+%TODO figures???
 
 % Describe the 5 Hadoop design principles (Perhaps move to Introduction)
 
