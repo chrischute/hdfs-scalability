@@ -99,7 +99,7 @@ Despite the benefits of having only a single NameNode, this architectural decisi
 
 The obvious problem with forcing all metadata to be in memory on the NameNode is that the NameNode will run out of available memory. %todo cite Shvanko
 
-Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the number of blocks allocated to each file, and $ F $ be the number of files on the system. Also, let $ c $ be the number of bytes to represent a single block mapping to all replicas of a block, and $ i $ the number of bytes to represent and inode. If we want to fit all metadata into memory, it is clear that we must have:
+Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the number of blocks allocated to each file, and $ F $ be the number of files on the system. Also, let $ c $ be the number of bytes to represent a single block mapping to all replicas of a block, and $i$ the number of bytes to represent and inode. If we want to fit all metadata into memory, it is clear that we must have:
 \begin{align*}
 	M > \lambda c F + i F
 \end{align*}
