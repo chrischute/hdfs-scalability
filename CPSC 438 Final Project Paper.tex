@@ -87,12 +87,8 @@ All metadata is kept in memory on the NameNode. Given a file of size $F$ and a b
 Durability of the NameNode is critical to the availability of HDFS. There are various schemes to ensure a durable NameNode. A write ahead log is maintained on stable storage and this can be used to build a BackupNode or CheckpointNode that essentially maintains a copy of the NameNode. 
 
 \subsection{Reads and Writes in HDFS}
-% Perhaps add section for how Read / Write operations are processed in HDFS? Might help describe the type of operations Namenode has to process.
-% E.g. Client Request Workflow for reading data
 
-% -------------------------------------------------
-
-Files in HDFS are append-only and can only be written to by a single writer at a time so that once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes and blocks to write. Then, the client will ensure a replicated write by sending data in TCP-style packets through a pipeline including all DataNodes over which the file will be replicated. This guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then, the client reads from the closest available DataNodes directly. 
+Files in HDFS are append-only and can only be written to by a single writer at a time so that once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes and blocks to write. Then, the client will ensure a replicated write by sending data in TCP-style packets through a pipeline including all DataNodes over which the file will be replicated. This guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then, the client reads from the closest available DataNodes directly.
 
 
 \section{Limitations of Single Namenode Architecture}
