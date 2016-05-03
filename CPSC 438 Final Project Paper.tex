@@ -212,7 +212,7 @@ A more typical usage pattern for HDFS would involve interleaved reads and writes
 The results of our experiments showed that...
 % TODO: Read/write experimental results.
 
-\subsubsection{Experiment 6: High-Frequency Requests}\label{HighFrequencyRequests}
+\subsubsection{Experiment 6: Frequent Requests}\label{HighFrequencyRequests}
 % Discuss raw results independently for each experiment:
 % Are these results what was expected (and why)?
 % If there was some error, discuss what may have caused it
@@ -238,11 +238,9 @@ These results show only that the scalability of reads and writes is not linear. 
 
 Some improvements have been suggested to solve the scalability problems with HDFS. One attempt to address the memory bottleneck is Apache's HDFS Federation. This system modifies HDFS by creating multiple NameNodes each of which has its own separate namespace \cite{Federation}. This is not a fundamental solution to the architectural problem, but rather merely adds more hardware to increase the memory bottleneck. Thus HDFS Federation is still a potentially inefficient use of memory on the NameNodes given a dataset of many small files. Additionally, with multiple independent namespaces the system cannot perform operations across the namespaces. Thus, the complexity of cross-partition transactions must be handled by the client application. The client can use symbolic links and client-side mount tables to make the multiple namespaces transparent to the user, so long as the client can tolerate higher request latency.
 
-Some other distributed file systems like CalvinFS have been designed to more fundamentally address the memory bottleneck \cite{CalvinFS}. CalvinFS treats file metadata similar to any other data in a distributed database system. It transforms operations on file metadata into distributed transactions as outlined by the Calvin database system. In this way, CalvinFS supports scalable metadata management. However, many users would prefer to have an open-source solution 
+Some other distributed file systems like CalvinFS have been designed to more fundamentally address the memory bottleneck \cite{CalvinFS}. CalvinFS treats file metadata similar to any other data in a distributed database system. It transforms operations on file metadata into distributed transactions as outlined by the Calvin database system. In this way, CalvinFS supports scalable metadata management while ensuring durability and providing standard file system operations. However, many users would prefer to have an open-source solution.
 
-One potential new solution would be to add an intermediate layer if you knew that you had many small files that would only be written once and never appended. 
-EXPLAIN THIS.
-
+We now offer a potential solution for future exploration. We consider the case when a potential application will perform large batch reads and writes of many small files with infrequent updates to files. In this case, an intermediate overlay could be implemented between HDFS and the client application. To perform a batch write operation, the overlay would aggregate many small files into one large file and store a mapping of each small file into its constituent large block. On batch reads, the overlay would perform a mapping of the files to be read and determine which 
 \section{Conclusion}
 
 \bibliographystyle{plain}
