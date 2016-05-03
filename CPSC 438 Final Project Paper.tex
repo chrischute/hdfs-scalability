@@ -228,7 +228,14 @@ Our experimental setup was as follows. Again we used HDFSClient threads querying
 We see that there is an initial spike in throughput as the utilization of the DataNodes increases to full capacity. In the case of reads, there is a slight decrease in the number of connections beyond 8. Importantly we do not observe a sharp decline in throughput. For writes, we see no decline whatsoever.
 
 These results show only that the scalability of reads and writes is not linear. That is, there is some bottleneck achieved around 8 connections. However, we expected that this bottleneck is not due to NameNode processing but rather in disk I/O and network communication between the DataNodes. To test this hypothesis, we ran the same test but only requested the block \textit{locations}. Thus the read and write requests never reached the DataNodes. This produced the following graph.
+
 % TODO: Experiment where we only request the block locations.
+
+\subsubsection{Experiment 7: Internal Load}\label{internal}
+
+To see the internal load created by the heartbeats, we checked the CPU load on an idle system with different amounts of files on the system. For our very small system, we were not able to put enough files on the servers to notice any uptick in CPU load from the heartbeats. Essentially, the limit of the memory of the NameNode dominated this potential bottleneck so thoroughly that we were not able to even see any substantive change in CPU load when the memory limit was reached. This could be because our system had only three DataNodes, and thus received only three heartbeats. We saw about a $ .3\% $ CPU usage from each node, so with thousands of nodes this could become a bottleneck, but not in our system. 
+
+
 
 \section{Improvements to HDFS}\label{Improvements}
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
