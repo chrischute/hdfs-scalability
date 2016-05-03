@@ -191,7 +191,7 @@ We next tested the throughput of HDFS reads as more small files were added to th
 We found that there was no decrease in throughput as more files were added. As shown in Figure 4, the read throughput hovered around 100 files per second. This supports the HDFS design assumption that metadata operations are inexpensive relative to other file system and network operations of HDFS. Moreover, it does not support the hypothesis that disk seeks on random file access are more expensive when more files were added.
 
 \begin{center}
-	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ThroughputResults}	
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ThroughputResults}
 	\textit{Fig. 4: Isolated Read/Isolated Write Throughput}
 \end{center}
 \subsubsection{Experiment 4: Write Throughput}\label{WriteThroughput}
@@ -215,18 +215,21 @@ The results of our experiments showed that...
 % -------------------------------------------------
 A dataset consisting of a large number of small files would likely receive a higher frequency of queries than another dataset. A typical client will read a file, process that file's data, then request the next file. Small files will be processed at the client more quickly than large files, therefore one would expect the client to have a higher frequency of requests. Since each request must first query the NameNode for a block mapping, this will put a large strain on the NameNode. In this section we explore the possibility that this usage pattern associated with small files results in a bottleneck.
 
-
+Our experimental setup was as follows. Again we used HDFSClient threads querying from multiple machines. We uploaded a large set of roughly 25,000 10-byte files to HDFS. The HDFSClients then randomly read these files to their local file system. We measured the throughput of these requests as the number of clients varied from a single connection thread and moving up to 64 HDFSClients. Each client made requests as quickly as possible, and we looked for a decrease in throughput as the NameNode received more concurrent read and write queries. This produced the following graph.
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ConcurrencyResults}	
+	\textit{Fig. 5: Read Throughput vs. Request Frequency}
+\end{center}
+We see that there is an initial spike in throughput as the number of the utilization of the DataNodes increases. In the case of reads, there is a moderate decrease in the number of connections beyond 8. This is likely due to the fact that random reads involve disk seeks between each 
 \section{Improvements to Single NameNode Architecture}\label{Improvements}
 
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
-
 % -------------------------------------------------
-
 % Would it be helpful to remove the assumption that each file is assigned to its own block? Could be done with intermediate layer that puts small files into larger file, prevents edits
 
 % 
 
-% mention HDFS federation, CalvinFS
+% TODO: Mention HDFS federation, CalvinFS
 % 
 
 Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces \cite{Federation}. If the use can guarantee that there will not be cross-partition transaction that must access files on multiple NameNodes, this partitioning can increase the memory limit. However, this is more of a quick fix than a solution to the underlying architectural problem. 
