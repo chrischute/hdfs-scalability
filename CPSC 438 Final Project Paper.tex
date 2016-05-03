@@ -73,12 +73,11 @@ The rest of this paper is organized as follows. In section 2, we outline the arc
 % -------------------------------------------------
 
 \section{HDFS Architecture}
-% TODO: Figures?
+% TODO: Insert figures showing HDFS architecture.
 
 With these principles in mind, the HDFS architecture is designed as follows. An HDFS cluster consists of a single NameNode and many DataNodes. Briefly, the NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, an HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
 
-% TODO: Say which section the linear block result is presented in.
-Each file is partitioned into one or more blocks, and each block is replicated across multiple DataNodes. The mapping for a file maps each block of the file to a list of DataNodes where the block is replicated. As presented below, the metadata associated with each file scales linearly with the number of blocks in each file. That is, there is a fixed size mapping for each block in the file. The NameNode holds all of this metadata in memory to facilitate fast metadata operations.
+Each file is partitioned into one or more blocks, and each block is replicated across multiple DataNodes. The mapping for a file maps each block of the file to a list of DataNodes where the block is replicated. As presented in Section 4.1, the metadata associated with each file scales linearly with the number of blocks in each file. That is, there is a fixed size mapping for each block in the file. The NameNode holds all of this metadata in memory to facilitate fast metadata operations.
 
 A single NameNode is used primarily to simplify the architecture and metadata management of HDFS. For instance, having a single NameNode makes it simpler to maintain consistency in the file system. A single NameNode architecture also allows for simple, centrally organized replication of each block across many DataNodes. If the metadata was not centralized, this replication operation and updating all data mappings would become complicated, and potentially overuse the network connecting the nodes.
 
@@ -95,7 +94,7 @@ Despite the benefits of having only a single NameNode, this architectural decisi
 \subsection{Physical Memory Size}
 % Re-iterate in-memory metadata namespace
 % Total File Capacity of Cluster is Limited by Name Node's RAM due to requirement that all metadata objects (file inodes and block) in memory at all times
-% SVENCHO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
+% SHVACHKO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
 
 In this section we present an analysis of the memory bottleneck described above.
 
@@ -107,7 +106,6 @@ This limit is much easier to reach with small files since each file is allocated
 	
 Using this model, we can perform simulations of how much data can be stored in an HDFS cluster if each file is of a given size. The motivation for this is that with larger files, each file will use more blocks, and thus create more metadata. However, the cost of storing the inode relative to the amount of data in the file will decrease with larger files. It is interesting to see how both file size and block size affect the total amount of data that an HDFS cluster can store before the memory bottleneck is reached.
 	
-% TODO: provide the 
 Below, we have graphs that represent the outcomes of these simulations. We assume that the NameNode has 2GB of RAM, and we perform the simulation for various block sizes (the size of each block that a file is divided into). We use the metadata sizes of $c = i = 150$, approximating our experimental findings below. First, we ran the simulation with a block size of 128 MB. We have one plot of file sizes from 1 byte to 100 GB and another showing only file sizes larger than the block size of 128 MB, since this part is nonlinear and more interesting. 
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logScale}
@@ -163,20 +161,22 @@ In this section we present our experimental results on the memory bottleneck and
 % Mention experimental setup (EC2, Java Test Skeleton, # nodes, etc)
 We query HDFS using the Hadoop Java API. On top of the FileSystem class provided by the API, we implemented a class called HDFSClient. Each HDFSClient object is runnable, and represents a single client making file access or modification requests to the file system. On each machine querying the NameNode, we spin up a pool of threads, each of which wraps an HDFSClient and reads from a global thread-safe \textit{request queue}. The master thread (different in each experiment) generates requests and places them on the request queue for processing by the HDFSClient worker threads. Each client repeatedly removes a request from the queue, issues that request to the NameNode and waits for the subsequent response. Examples of requests include writing a file from the local file system to HDFS, reading a file from HDFS, and deleting a file from HDFS.
 
-
 % FOR EACH EXPERIMENT:
 % Discuss designs of individual experiments and their results
 % What were the experiments testing?
 % What were the different parameters of the experiments?
 % Possibilities of error?
+\subsection{Experiment 1: Memory Bottleneck}
+The first goal of our experiments is to determine precisely how much memory is occupied on the NameNode for each file added to the system. Analysis of the source code for HDFS and theoretical results in the literature suggest that each file should yield roughly 150 bytes of inode plus 150 bytes for each block to account for the mapping \cite{HdfsSourceCode, ShvachkoPaper}. However, the peculiarities of the NameNode storage for recovery suggest that these numbers are not precisely correct. The NameNode stores the FSImage, a snapshot of the filesystem, as well as an Edits log that indicates the updates since the last snapshot. Backups of each file are also maintained. Hence it is possible that as more files are added to the system, each additional file will result in more occupied memory on the NameNode. Moreover we seek to verify that the mapping for each block is fixed-size, whether or not the entire block is occupied by file contents.
 
-\subsection{Experiment 1: Memory Experiments}
+To test the size of metadata, we create a pool of HDFSClient threads and add large batches of files to HDFS (cf. MetadataSizeTest.java). We measure the resulting increase in occupied memory on the NameNode. We find that 
+% TODO: Insert the metadata size results with graphs.
 
-% TODO: See above
+% TODO: Check the reported memory bottleneck results.
+Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding files to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 112 MB of metadata. This discrepancy between 2 GB and 112 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 112 MB of heap memory. This can be reconfigured 
 
 \subsection{Experiment 2: CPU Experiments}
 
-% TODO: See above
 
 \subsection{Analysis}
 
@@ -205,18 +205,13 @@ We query HDFS using the Hadoop Java API. On top of the FileSystem class provided
 Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces. If the use can guarantee that there will not be cross-partition transaction that must access files on multiple NameNodes, this partitioning can increase the memory limit. However, this is more of a quick fix than a solution to the underlying architectural problem. 
 
 Some other distributed file systems like CalvinFS have been designed to fix this problem in a more holistic way. EXPLAIN THIS 
-%TODO add sources here about federation, CalvinFS
+% TODO: Cite HDFS Federation and CalvinFS.
 
 One potential new solution would be to add an intermediate layer if you knew that you had many small files that would only be written once and never appended. 
 EXPLAIN THIS.
 
 \section{Conclusion}
 
-% Wrap it up with stuff.
-
-
-
-%TODO sources
 \bibliographystyle{plain}
 \bibliography{citations.bib}
 \end{multicols*}
