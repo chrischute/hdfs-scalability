@@ -69,7 +69,7 @@ The architecture of HDFS is designed with the following goals in mind:
 
 HDFS's key characteristic is in how it decouples metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
 
-The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5.
+The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5. Section 6 concludes.
 % -------------------------------------------------
 
 \section{HDFS Architecture}
