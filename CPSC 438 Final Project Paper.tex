@@ -220,17 +220,16 @@ Our experimental setup was as follows. Again we used HDFSClient threads querying
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ConcurrencyResults}	
 	\textit{Fig. 5: Read Throughput vs. Request Frequency}
 \end{center}
-We see that there is an initial spike in throughput as the number of the utilization of the DataNodes increases. In the case of reads, there is a moderate decrease in the number of connections beyond 8. This is likely due to the fact that random reads involve disk seeks between each 
-\section{Improvements to Single NameNode Architecture}\label{Improvements}
+We see that there is an initial spike in throughput as the utilization of the DataNodes increases to full capacity. In the case of reads, there is a slight decrease in the number of connections beyond 8. Importantly we do not observe a sharp decline in throughput. For writes, we see no decline whatsoever.
 
+These results show only that the scalability of reads and writes is not linear. That is, there is some bottleneck achieved around 8 connections. However, we expected that this bottleneck is not due to NameNode processing but rather in disk I/O and network communication between the DataNodes. To test this hypothesis, we ran the same test but only requested the block \textit{locations}. Thus the read and write requests never reached the DataNodes. This produced the following graph.
+% TODO: Experiment where we only request the block locations.
+
+\section{Improvements to Single NameNode Architecture}\label{Improvements}
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
 % -------------------------------------------------
 % Would it be helpful to remove the assumption that each file is assigned to its own block? Could be done with intermediate layer that puts small files into larger file, prevents edits
-
-% 
-
 % TODO: Mention HDFS federation, CalvinFS
-% 
 
 Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces \cite{Federation}. If the use can guarantee that there will not be cross-partition transaction that must access files on multiple NameNodes, this partitioning can increase the memory limit. However, this is more of a quick fix than a solution to the underlying architectural problem. 
 
