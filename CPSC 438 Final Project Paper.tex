@@ -121,7 +121,7 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 
 While each file is smaller than one block, a file is always allocated its own block in the system and thus has a constant metadata size. Then, since the files are linearly increasing in the amount of data they hold, but metadata remains constant, the capacity of the system (as limited by the RAM on the NameNode) grows linearly until files are larger than blocks. 
 
-Once a file is large than a block, the behavior becomes more interesting. Once the files get large enough to force an extra block to be allocated for each file, the cost of the extra metadata to record this block outweighs the increase in file size so that the overall capacity of the system decreases. This causes the zig-zag nature of the above graph. At the same time, the system also begins to reach the limit  
+Once a file is large than a block, the behavior becomes more interesting. Once the files get large enough to force an extra block to be allocated for each file, the cost of the extra metadata to record this block outweighs the increase in file size so that the overall capacity of the system decreases. This causes the zig-zag nature of the above graph. At the same time, the system also begins to reach the limit of the number of metadata mappings that can be stored in 2 GB, explaining why the graph flattens out with very large files.  
 
 Lastly, we ran the same simulation with many different block sizes.  Since the size of each block directly effects how many blocks a file of a given size is split into, and thus how much metadata it has, a larger block size should create less metadata per file. This resulted in the following plot:
 	
@@ -129,11 +129,11 @@ Lastly, we ran the same simulation with many different block sizes.  Since the s
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{variableBlockSize}	
 \end{center}
 
-This graph shows how larger block size does indeed lead to larger system capacity. 
-(COST OF LARGER BLOCKS)
+This graph shows how larger block size does indeed lead to larger system capacity. In fact the system has the highest capacity if each block is as large as memory of the NameNode, but such large blocks are impractical, as explained below. Another interesting point is that for the smallest block size, we see that at a certain point a single file that creates too many blocks will not fit in the system. Thus, the system has capacity 0. This happens since the metadata to hold all of the blocks for a single file of that size would not fit in memory on the NameNode. 
 
-	CONCLUSIONS
-	Thus, we expect this memory limit to be effected in the following main ways. (1) 
+However, there is a cost to having such large blocks. Mostly, this pushes the inefficiencies of the system onto the way disk of the DataNodes is allocated, instead of memory on the NameNode. Essentially, the very large virtual blocks will make the virtual memory and the mapping to physical memory more complicated on the DataNodes. Also, large blocks force the system to worry that appends that do not overrun a block will overrun the physical disk of the machine, so there will have to be careful safeguards in place. In practice HDFS has a large default block size of 128 MB. 
+
+	Thus, we expect this memory limit to be effected in the following main ways. (1) Larger files will give the system a larger overall capacity. (2) Larger blocks will give the system larger overall capacity, assuming the limiting factor is memory on the NameNode and not disk on the DataNodes (since we can always add more DataNode machines). 
 
 \subsection{Namenode CPU Bottleneck}
 The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that the NameNode operations are small enough and there will be few enough large files that they will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck. 
