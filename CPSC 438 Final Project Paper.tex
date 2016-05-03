@@ -73,7 +73,9 @@ The rest of this paper is organized as follows. In section 2, we outline the arc
 % -------------------------------------------------
 
 \section{HDFS Architecture}
-% TODO: Insert figures showing HDFS architecture.
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{Architecture}
+\end{center}
 
 With these principles in mind, the HDFS architecture is designed as follows. Much of the information in this section is adapted from \cite{HdfsArch}. An HDFS cluster consists of a single NameNode and many DataNodes. Briefly, the NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, an HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
 
