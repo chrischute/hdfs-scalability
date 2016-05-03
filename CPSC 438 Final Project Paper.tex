@@ -58,7 +58,7 @@ Many DFS implementations exist today. Each system differs in their performance, 
 
 This paper examines Hadoop Distributed File System (HDFS), a module of the Apache Hadoop ecosystem. HDFS is a distributed filesystem focused on scalability and portability. HDFS is not fully POSIX-compliant since it is specifically designed for handling large files terabytes in size. It trades the POSIX functionality like mutable files for increasing data throughput and supporting operations like Append.
 
-The architecture of HDFS is designed with the following goals in mind:
+The architecture of HDFS is designed with the following goals in mind \cite{HdfsGuide}:
 \begin{enumerate}[noitemsep, label=\arabic*.]
 	\item\textit{Support regular hardware failure.} This is accomplished primarily through replication of data across multiple DataNodes.
 	\item\textit{Allow streaming data access.} Partitioning should be transparent so that files appear to be stored sequentially. Reads are distributed so that streaming access does not block other transactions.
