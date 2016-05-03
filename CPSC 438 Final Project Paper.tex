@@ -72,10 +72,16 @@ HDFS's key characteristic is in how it decouples metadata from file data. Althou
 The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5. Section 6 concludes.
 % -------------------------------------------------
 
-\section{HDFS Architecture}
+\end{multicols*}
+
 \begin{center}
-	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{Architecture}
+	\includegraphics[keepaspectratio=true, width=0.75\textwidth]{Architecture}
 \end{center}
+
+\begin{multicols*}{2}
+
+\section{HDFS Architecture}
+
 
 With these principles in mind, the HDFS architecture is designed as follows. Much of the information in this section is adapted from \cite{HdfsArch}. An HDFS cluster consists of a single NameNode and many DataNodes. Briefly, the NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, an HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
 
