@@ -242,9 +242,6 @@ Some other distributed file systems like CalvinFS have been designed to more fun
 
 We now offer a potential solution for future exploration. We consider the case when a potential application will perform large batch reads and writes of many small files with infrequent updates to files. In this case, an intermediate overlay could be implemented between HDFS and the client application. To perform a batch write operation, the overlay would aggregate many small files into one large file and store a mapping of each small file into its constituent large block. On batch reads, the overlay would perform a mapping of the files to be read and determine which 
 \section{Conclusion}
-
-Well, its been quite a ride. Thanks for reading. Really, thanks. So what have we learned? A lot.
-
 So, in sum, we have found that the amount of RAM on the NameNode is a serious problem with HDFS and seems to dominate the potential CPU bottlenecks that the system architecture creates. This memory limit can be effected by the type of files stored on the system and the configuration of the system itself (eg. block size, replication factor). There are a few possible ways around this memory limit and depending on the use case any of them could be appropriate. 
 
 \bibliographystyle{plain}
@@ -276,5 +273,3 @@ So, in sum, we have found that the amount of RAM on the NameNode is a serious pr
 
 
 
-
- ``
