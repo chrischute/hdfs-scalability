@@ -97,46 +97,46 @@ Despite the benefits of having only a single NameNode, this architectural decisi
 % Total File Capacity of Cluster is Limited by Name Node's RAM due to requirement that all metadata objects (file inodes and block) in memory at all times
 % SVENCHO PAPER EXAMPLE: Assuming on average, a file consists of \lambda = 1.5 blocks, then each file uses 1 file and ~2 data block objects, hence uses ~600 bytes. Thus to keep 100 million files, name-node must have at least 60GM of RAM
 
-The obvious problem with forcing all metadata to be in memory on the NameNode is that the NameNode will run out of available memory.
+In this section we present an analysis of the memory bottleneck described above.
 
 Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the number of blocks allocated to each file, and $ F $ be the number of files on the system. Also, let $ c $ be the number of bytes to represent a single block mapping to all replicas of a block, and $i$ the number of bytes to represent and inode. If we want to fit all metadata into memory, it is clear that we must have:
 \begin{align*}
 	M > \lambda c F + i F
 \end{align*}
-	This limit is much easier to reach with small files since each file is allocated its own virtual block, no matter how small the file is, i.e. we have that $ \lambda \geq 1$. This means that creating many small files should take up $ c + i$ bytes for each additional file, while growing a file by a similar amount will use at most $ c $ bytes. Thus, the memory limit is much more of a problem for many small files. 
+This limit is much easier to reach with small files since each file is allocated its own virtual block, no matter how small the file is, \textit{i.e.,} we have that $ \lambda \geq 1$. This means that creating many small files should take up $ c + i$ bytes for each additional file, while growing a file by a similar amount will use at most $ c $ bytes. Thus, the memory limit is much more of a problem for many small files. 
 	
-	Using this model, we can perform simulations of how much data can be stored in an HDFS cluster if each file is of a given size. The motivation for this is that with larger files, each file will use more blocks, and thus create more metadata. However, the cost of storing the inode relative to the amount of data in the file will decrease with larger files. It is interesting to see how both file size and block size effect the total amount of data that an HDFS cluster can store before the memory bottleneck is reached.
+Using this model, we can perform simulations of how much data can be stored in an HDFS cluster if each file is of a given size. The motivation for this is that with larger files, each file will use more blocks, and thus create more metadata. However, the cost of storing the inode relative to the amount of data in the file will decrease with larger files. It is interesting to see how both file size and block size affect the total amount of data that an HDFS cluster can store before the memory bottleneck is reached.
 	
-	Below, we have graphs that represent the outcomes of these simulations. We assume that (like in our HDFS cluster on AWS) that the NameNode has 2GB of RAM, and perform the simulation for various block sizes (the size of each block that a file is divided into). We use the metadata sizes from our experimental section below of $ c = i = 150$. First, we ran the simulation with a block size of 128 MB. We have one plot of file sizes from 1 byte to 100 GB and another showing only file sizes larger than the block size of 128 MB, since this part is nonlinear and more interesting. 
-	
-
-
+% TODO: provide the 
+Below, we have graphs that represent the outcomes of these simulations. We assume that the NameNode has 2GB of RAM, and we perform the simulation for various block sizes (the size of each block that a file is divided into). We use the metadata sizes of $c = i = 150$, approximating our experimental findings below. First, we ran the simulation with a block size of 128 MB. We have one plot of file sizes from 1 byte to 100 GB and another showing only file sizes larger than the block size of 128 MB, since this part is nonlinear and more interesting. 
 \begin{center}
-	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logScale}	
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logScale}
+	\textit{Fig. 1: Cluster Capacity vs. File Size}
 \end{center}
 
 \begin{center}
-	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logLogScale}	
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logLogScale}
+	\textit{Fig. 2: Capacity vs. File Size (Zoomed Window)}	
 \end{center}
 
 While each file is smaller than one block, a file is always allocated its own block in the system and thus has a constant metadata size. Then, since the files are linearly increasing in the amount of data they hold, but metadata remains constant, the capacity of the system (as limited by the RAM on the NameNode) grows linearly until files are larger than blocks. 
 
-Once a file is large than a block, the behavior becomes more interesting. Once the files get large enough to force an extra block to be allocated for each file, the cost of the extra metadata to record this block outweighs the increase in file size so that the overall capacity of the system decreases. This causes the zig-zag nature of the above graph. At the same time, the system also begins to reach the limit of the number of metadata mappings that can be stored in 2 GB, explaining why the graph flattens out with very large files.  
+Once a file is larger than a block, the behavior becomes more interesting. At the threshold where the file size increases from $n$ blocks to $n+1$ blocks, the cost of the extra metadata to record this block outweighs the increase in file size so that the overall capacity of the system decreases. This causes the zig-zag nature of the above graph. At the same time, the system also begins to reach the limit of the number of metadata mappings that can be stored in 2 GB, explaining why the graph flattens out with very large files. 
 
-Lastly, we ran the same simulation with many different block sizes.  Since the size of each block directly effects how many blocks a file of a given size is split into, and thus how much metadata it has, a larger block size should create less metadata per file. This resulted in the following plot:
-	
+Lastly, we ran the same simulation with many different block sizes.  Since the block size determines the number of blocks per file, and thus the amount of metadata per file, a larger block size should create less metadata per file. This resulted in the following plot:
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{variableBlockSize}	
+	\textit{Fig. 3: Capacity vs. File Size (Varying Block Size)}
 \end{center}
 
 This graph shows how larger block size does indeed lead to larger system capacity. In fact the system has the highest capacity if each block is as large as memory of the NameNode, but such large blocks are impractical, as explained below. Another interesting point is that for the smallest block size, we see that at a certain point a single file that creates too many blocks will not fit in the system. Thus, the system has capacity 0. This happens since the metadata to hold all of the blocks for a single file of that size would not fit in memory on the NameNode. 
 
-However, there is a cost to having such large blocks. Mostly, this pushes the inefficiencies of the system onto the way disk of the DataNodes is allocated, instead of memory on the NameNode. Essentially, the very large virtual blocks will make the virtual memory and the mapping to physical memory more complicated on the DataNodes. Also, large blocks force the system to worry that appends that do not overrun a block will overrun the physical disk of the machine, so there will have to be careful safeguards in place. In practice HDFS has a large default block size of 128 MB. 
+Thus, we expect this memory limit to be affected in the following main ways. (1) Larger files will give the system a larger overall capacity. (2) Larger blocks will give the system larger overall capacity, assuming the limiting factor is memory on the NameNode and not disk on the DataNodes (since we can always add more DataNode machines).
 
-	Thus, we expect this memory limit to be effected in the following main ways. (1) Larger files will give the system a larger overall capacity. (2) Larger blocks will give the system larger overall capacity, assuming the limiting factor is memory on the NameNode and not disk on the DataNodes (since we can always add more DataNode machines). 
+Although large blocks produce the smallest amount of metadata, increasing the block size poses a tradeoff. There are two primary concerns with a very large block size. First, a larger block size causes data to be less equally distributed throughout the cluster. This potentially reduces the efficiency of streaming reads, as file operations are less distributed across the DataNodes. Second, during a MapReduce job, each map task is run on a single block (the FileSplit factor is set to the size of a block) \cite{HdfsDefaults}. As a result, larger blocks make MapReduce less distributed and hence less efficient. In practice Apache HDFS has a large default block size of 128 MB \cite{HdfsDefaults}.
 
-\subsection{Namenode CPU Bottleneck}
-The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that the NameNode operations are small enough and there will be few enough large files that they will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck. 
+\subsection{NameNode CPU Bottleneck}
+The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that metadata operations are inexpensive relative to network communication and file I/O. The HDFS architecture also assumes that there will be few enough large files that the number of such metadata operations (including requests for block locations) will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck.
 
 % Describe the INTERNAL-LOAD communicating with DataNodes
 % # of Heartbeats that NameNode receives is directly proportional to # of DataNodes in cluster
@@ -144,18 +144,14 @@ The less obvious scalability problem with the HDFS architecture is the potential
 % Physical data storage and data I/O performance increase proportionally to # of DataNodes in cluster and size of data blocks, but the overall performance of HDFS is also affected negatively by increased internal load.
 % The more time spend on internal load, less time spend on processing external client's requests
 
-The first potential source of CPU bottleneck is the internal-load of communication with the DataNodes. This internal-load can be created in two ways. First, internal-load can be created when the system holds a large amount of small files. The size of the block report sent by each DataNode is directly proportional to the number of blocks that the DataNode holds. Since each file is given its own virtual block, even if the file is much smaller than a block, the DataNode can potentially hold a great number of small files and have to send a large block report containing the metadata of each of these files. This could potentially overload the NameNode CPU. 
-Second, the number of block reports that a NameNode receives is directly proportional to the number of DataNodes in the system. So, if the system has a large number of DataNodes, it is possible to generate a large amount of internal load by having many DataNodes.  
-
+The first potential source of CPU bottleneck is the internal-load of communication with the DataNodes. This internal-load can be created in two ways. First, internal-load can be created when the system holds a large amount of small files. The size of the block report sent by each DataNode is directly proportional to the number of blocks that the DataNode holds. Since each file is given its own virtual block even if the entire file is much smaller than a block, small files allow each DataNode to hold a larger number of blocks. That is, small files increase the block density. As a result, each DataNode must send a larger block report to the NameNode with each heartbeat. The processing of these block reports could potentially overload the NameNode CPU and increase the latency of requests to the NameNode.
 
 % Describe the external-load from clients
 % All metadata operations run on Namenode - they cannot be processed anywhere else.
 % On every file read, there is a get_block_location per block per file
 % On every file write, there is a create_block per block per file
 % Namenode can become a bottleneck with operations that involve many metadata operations, e.g. batch-write operations will include many create_block requests
-
 % -------------------------------------------------
-
 Another potential source of CPU bottleneck is external-load from clients querying the NameNode. As explained above, on both reads and writes a client must first contact the NameNode to find the appropriate block locations and then the DataNodes for the read or write. Afterwards the NameNode must perform a metadata operation to determine what to return to the client. Therefore, the NameNode can become a bottleneck if there are many clients trying to perform operations concurrently since they all must access the metadata via the singular NameNode. This should be an especially prevalent problem when there are many small files because it would be likely that the use pattern of a system with many small files would be for there to be many clients each trying to access their files concurrently. 
 
 With these potential CPU bottlenecks in mind, we pose the question of whether it is possible to generate an appropriate load so as to reach these CPU bottlenecks before the NameNode runs out of memory. This will be addressed by our experimentation. 
@@ -219,7 +215,8 @@ EXPLAIN THIS.
 
 
 %TODO sources
-
+\bibliographystyle{plain}
+\bibliography{citations.bib}
 \end{multicols*}
 \end{document}
 
