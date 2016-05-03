@@ -105,10 +105,11 @@ Let $ M $ be the size of memory on the NameNode in bytes, $ \lambda $ be the num
 \end{align*}
 	This limit is much easier to reach with small files since each file is allocated its own virtual block, no matter how small the file is, i.e. we have that $ \lambda \geq 1$. This means that creating many small files should take up $ c + i$ bytes for each additional file, while growing a file by a similar amount will use at most $ c $ bytes. Thus, the memory limit is much more of a problem for many small files. 
 	
-DAVE TALK ABOUT THE MAXIMUM WE CAN STORE GIVEN FILE SIZE, ETC.
-\begin{center}
-	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{variableBlockSize}	
-\end{center}
+	Using this model, we can perform simulations of how much data can be stored in an HDFS cluster if each file is of a given size. The motivation for this is that with larger files, each file will use more blocks, and thus create more metadata. However, the cost of storing the inode relative to the amount of data in the file will decrease with larger files. It is interesting to see how both file size and block size effect the total amount of data that an HDFS cluster can store before the memory bottleneck is reached.
+	
+	Below, we have graphs that represent the outcomes of these simulations. We assume that (like in our HDFS cluster on AWS) that the NameNode has 2GB of RAM, and perform the simulation for various block sizes (the size of each block that a file is divided into). We use the metadata sizes from our experimental section below of $ c = i = 150$. First, we ran the simulation with a block size of 128 MB. We have one plot of file sizes from 1 byte to 100 GB and another showing only file sizes larger than the block size of 128 MB, since this part is nonlinear and more interesting. 
+	
+
 
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logScale}	
@@ -117,7 +118,22 @@ DAVE TALK ABOUT THE MAXIMUM WE CAN STORE GIVEN FILE SIZE, ETC.
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logLogScale}	
 \end{center}
+
+While each file is smaller than one block, a file is always allocated its own block in the system and thus has a constant metadata size. Then, since the files are linearly increasing in the amount of data they hold, but metadata remains constant, the capacity of the system (as limited by the RAM on the NameNode) grows linearly until files are larger than blocks. 
+
+Once a file is large than a block, the behavior becomes more interesting. Once the files get large enough to force an extra block to be allocated for each file, the cost of the extra metadata to record this block outweighs the increase in file size so that the overall capacity of the system decreases. This causes the zig-zag nature of the above graph. At the same time, the system also begins to reach the limit  
+
+Lastly, we ran the same simulation with many different block sizes.  Since the size of each block directly effects how many blocks a file of a given size is split into, and thus how much metadata it has, a larger block size should create less metadata per file. This resulted in the following plot:
 	
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{variableBlockSize}	
+\end{center}
+
+This graph shows how larger block size does indeed lead to larger system capacity. 
+(COST OF LARGER BLOCKS)
+
+	CONCLUSIONS
+	Thus, we expect this memory limit to be effected in the following main ways. (1) 
 
 \subsection{Namenode CPU Bottleneck}
 The less obvious scalability problem with the HDFS architecture is the potential for a CPU bottleneck at the NameNode. The system is built on the assumption that the NameNode operations are small enough and there will be few enough large files that they will be insignificant. However, with many small files, these assumptions are violated and the NameNode CPU could become a bottleneck. 
