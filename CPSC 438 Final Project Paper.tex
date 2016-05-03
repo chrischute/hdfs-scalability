@@ -75,14 +75,12 @@ The rest of this paper is organized as follows. In section 2, we outline the arc
 \end{multicols*}
 
 \begin{center}
-	\includegraphics[keepaspectratio=true, width=0.75\textwidth]{Architecture}
+	\includegraphics[keepaspectratio=true, width=0.75\textwidth]{Architecture}\\
+	\textit{Fig. 1: Architecture of HDFS}
 \end{center}
 
 \begin{multicols*}{2}
-
 \section{HDFS Architecture}
-
-
 With these principles in mind, the HDFS architecture is designed as follows. Much of the information in this section is adapted from \cite{HdfsArch}. An HDFS cluster consists of a single NameNode and many DataNodes. Briefly, the NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, an HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
 
 Each file is partitioned into one or more blocks, and each block is replicated across multiple DataNodes. The mapping for a file maps each block of the file to a list of DataNodes where the block is replicated. As presented in Section \ref{MetadataSize}, the metadata associated with each file scales linearly with the number of blocks in each file. That is, there is a fixed size mapping for each block in the file. The NameNode holds all of this metadata in memory to facilitate fast metadata operations.
@@ -120,12 +118,12 @@ Using this model, we can perform simulations of how much data can be stored in a
 Below, we have graphs that represent the outcomes of these simulations. We assume that the NameNode has 2GB of RAM, and we perform the simulation for various block sizes (the size of each block that a file is divided into). We use the metadata sizes of $c = i = 150$, approximating our experimental findings below. First, we ran the simulation with a block size of 128 MB. We have one plot of file sizes from 1 byte to 100 GB and another showing only file sizes larger than the block size of 128 MB, since this part is nonlinear and more interesting. 
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logScale}
-	\textit{Fig. 1: Cluster Capacity vs. File Size}
+	\textit{Fig. 2: Cluster Capacity vs. File Size}
 \end{center}
 
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{logLogScale}
-	\textit{Fig. 2: Capacity vs. File Size (Zoomed Window)}	
+	\textit{Fig. 3: Capacity vs. File Size (Zoomed Window)}	
 \end{center}
 
 While each file is smaller than one block, a file is always allocated its own block in the system and thus has a constant metadata size. Then, since the files are linearly increasing in the amount of data they hold, but metadata remains constant, the capacity of the system (as limited by the RAM on the NameNode) grows linearly until files are larger than blocks. 
@@ -135,7 +133,7 @@ Once a file is larger than a block, the behavior becomes more interesting. At th
 Lastly, we ran the same simulation with many different block sizes.  Since the block size determines the number of blocks per file, and thus the amount of metadata per file, a larger block size should create less metadata per file. This resulted in the following plot:
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{variableBlockSize}	
-	\textit{Fig. 3: Capacity vs. File Size (Varying Block Size)}
+	\textit{Fig. 4: Capacity vs. File Size (Varying Block Size)}
 \end{center}
 
 This graph shows how larger block size does indeed lead to larger system capacity. In fact the system has the highest capacity if each block is as large as memory of the NameNode, but such large blocks are impractical, as explained below. Another interesting point is that for the smallest block size, we see that at a certain point a single file that creates too many blocks will not fit in the system. Thus, the system has capacity 0. This happens since the metadata to hold all of the blocks for a single file of that size would not fit in memory on the NameNode. 
@@ -196,16 +194,16 @@ In this section we test the throughput of file operations as more files are adde
 \subsubsection{Experiment 3: Read Throughput}\label{ReadThroughput}
 We next tested the throughput of HDFS reads as more small files were added to the system. One might expect throughput to decrease as more files are added due to the increasing complexity of block mappings, as well as a wider range of disk seeks on the DataNode. In this experiment (found in ThroughputTest.java), there is a pool of 64 HDFSClient workers on three different machines. The workers go through two stages: First we create a pool of worker threads and measure throughput while reading roughly 1000 random files from HDFS to the local file system. In the second stage, new workers add 25,000 files to the system. The worker threads are killed and the throughput is again measured with 25,000 additional files on the system. This was repeated at increments of 25,000 files until the memory bottleneck was reached at roughly 234,000 files.
 
-We found that there was no decrease in throughput as more files were added. As shown in Figure 4, the read throughput hovered around 100 files per second. This supports the HDFS design assumption that metadata operations are inexpensive relative to other file system and network operations of HDFS. Moreover, it does not support the hypothesis that disk seeks on random file access are more expensive when more files were added.
+We found that there was no decrease in throughput as more files were added. As shown in Figure 5, the read throughput hovered around 100 files per second. This supports the HDFS design assumption that metadata operations are inexpensive relative to other file system and network operations of HDFS. Moreover, it does not support the hypothesis that disk seeks on random file access are more expensive when more files were added.
 
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ThroughputResults}
-	\textit{Fig. 4: Isolated Read/Isolated Write Throughput}
+	\textit{Fig. 5: Isolated Read/Isolated Write Throughput}
 \end{center}
 \subsubsection{Experiment 4: Write Throughput}\label{WriteThroughput}
 Although read throughput was not affected by the number of files stored on the cluster, we posited that write throughput may still be affected. While reads need only query a single DataNode, writes must be replicated down a pipeline of $R$ DataNodes, where $R$ is the replication factor (here $R = 3$). Hence write operations involve  all DataNodes in our cluster. Each DataNode must perform a disk seek to a free location in physical memory, and HDFS cannot select the least busy DataNode to service a request.
 
-The design of the write throughput experiments mirrored the design of the read throughput test. As seen in Figure 4 above, our experiments showed no decrease in write throughput as more files are added to HDFS. The write throughput hovered around 80 files per second over the entire range of 0 to 225,000 files on the cluster.
+The design of the write throughput experiments mirrored the design of the read throughput test. As seen in Figure 5 above, our experiments showed no decrease in write throughput as more files are added to HDFS. The write throughput hovered around 80 files per second over the entire range of 0 to 225,000 files on the cluster.
 % TODO: Insert graphs for write throughput.
 
 \subsubsection{Experiment 5: Mixed Reads and Writes}\label{ReadWriteThroughput}
@@ -226,7 +224,7 @@ A dataset consisting of a large number of small files would likely receive a hig
 Our experimental setup was as follows. Again we used HDFSClient threads querying from multiple machines. We uploaded a large set of roughly 25,000 10-byte files to HDFS. The HDFSClients then randomly read these files to their local file system. We measured the throughput of these requests as the number of clients varied from a single connection thread and moving up to 64 HDFSClients. Each client made requests as quickly as possible, and we looked for a decrease in throughput as the NameNode received more concurrent read and write queries. This produced the following graph.
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ConcurrencyResults}	
-	\textit{Fig. 5: Read Throughput vs. Request Frequency}
+	\textit{Fig. 6: Read Throughput vs. Request Frequency}
 \end{center}
 We see that there is an initial spike in throughput as the utilization of the DataNodes increases to full capacity. In the case of reads, there is a slight decrease in the number of connections beyond 8. Importantly we do not observe a sharp decline in throughput. For writes, we see no decline whatsoever.
 
