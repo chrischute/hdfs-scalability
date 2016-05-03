@@ -190,6 +190,10 @@ The design of the write throughput experiments mirrored the design of the read t
 % TODO: Insert graphs for write throughput.
 
 \subsection{Experiment 5: Mixed Read/Write Throughput}
+A more typical usage pattern for HDFS would involve interleaved reads and writes. Therefore we ran experiments measuring throughput of HDFS mixed reads and writes as more files are added to the system. We note that it is possible that batch writes allow each DataNode in the pipeline to avoid disk seeks between writes. That is, assuming there is a large contiguous segment of free disk space available, the DataNode can write each new file without disk seeks. Thus the write throughput test above would not show any decrease in throughput due to disk seeks. However, mixed (random) reads and writes would force each DataNode to seek on disk, so one might expect to see performance degenerate as more small files are added.
+
+The results of our experiments showed
+% TODO: Read/write experimental results.
 
 \subsection{Experiment 6: CPU Bottleneck}
 
