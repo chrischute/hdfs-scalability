@@ -171,15 +171,16 @@ The first goal of our experiments is to determine precisely how much memory is o
 To test the size of metadata, we create a pool of HDFSClient threads and add large batches of files to HDFS (cf. MetadataSizeTest.java). We measure the resulting increase in occupied memory on the NameNode. We find that 
 % TODO: Insert the metadata size results with graphs.
 
-\subsection{Experiment 2: Reaching the Memory Bottleneck}
+\subsection{Experiment 2: Memory Bottleneck}
 % TODO: Check the reported memory bottleneck results.
-Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding files to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 112 MB of metadata. This discrepancy between 2 GB and 112 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 112 MB of heap memory. This limit can be changed in the HDFS configuration and was set to its maximum value in our experiments given the size of our NameNode memory.
+Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding small files (10 B each) to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 112 MB of metadata. This discrepancy between 2 GB and 112 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 112 MB of heap memory. This limit can be changed in the HDFS configuration and was set to its maximum value in our experiments given the size of our NameNode memory.
 
 We note that once the memory bottleneck is reached, HDFS does not refuse more files but rather the JVM fails on basic operations. For example, a query of the root directory (\texttt{hdfs dfs -ls /}) fails due to shortage of memory. So the file system is rendered unreadable unless files are removed.
 
-\subsection{Experiment 3: Read Throughput with Metadata}
+\subsection{Experiment 3: Read Throughput}
+We next tested the throughput of HDFS reads as more small files were added to the system. One might expect throughput to decrease as more files are added due to the increasing complexity of block mappings, as well as a wider range of disk seeks on the DataNode. In this experiment (found in ThroughputTest.java), the HDFSClient workers go through two stages: First we create a pool of worker threads and measure throughput while reading roughly 1000 random files from HDFS to the local file system. In the second stage, new workers add 25,000 files to the system. The worker threads are killed and the throughput is again measured with 25,000 additional files on the system.
 
-\subsection{Experiment 4: Write Throughput with Metadata}
+\subsection{Experiment 4: Write Throughput}
 
 \subsection{Experiment 2: CPU Bottleneck}
 
