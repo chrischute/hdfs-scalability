@@ -50,9 +50,9 @@
 
 \section{Introduction}
 
-Distributed filesystems (DFS), also known as network filesystems, store remote files in a format accessible with the same semantics as a local filesystem. It offers a transparent interface for handling files and directories, abstracting features like access control, recovery and concurrency. DFS offers a scalable mechanism for creating logical filesystems shared by many clients.
+Distributed filesystems (DFS), also known as network filesystems, store remote files in a format accessible with the same semantics as a local filesystem. A DFS offers a transparent interface for handling files and directories, access control, recovery and concurrency. Additionally, a DFS offers a scalable mechanism for creating logical filesystems shared by many clients.
 
-The DFS architecture has many advantages; it offers a unified hierarchical namespace for shared files and folders, location transparency in physical data placement, load balancing across nodes, storage scalability via expanding clusters, increased availability through distributed data, and fault tolerance by replication across racks.
+The DFS architecture has many advantages: it offers a unified hierarchical namespace for shared files and folders, location transparency in physical data placement, load balancing across nodes, storage scalability via expanding clusters, increased availability through distributed data, and fault tolerance by replication across racks.
 
 Many DFS implementations exist today. Each system differs in their performance, data mutability, management of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFSs like Hadoop Distributed File System.
 
@@ -67,7 +67,7 @@ The architecture of HDFS is designed with the following goals in mind \cite{Hdfs
 	\item\textit{Run everywhere (portability).} HDFS runs on top of the Java Virtual Machine, which provides nearly universal portability.
 \end{enumerate}
 
-HDFS's key characteristic is in how it decouples metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
+HDFS's key characteristic is how it decouples metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
 
 The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5. Section 6 concludes.
 % -------------------------------------------------
