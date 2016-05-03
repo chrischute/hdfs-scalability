@@ -88,7 +88,6 @@ Durability of the NameNode is critical to the availability of HDFS. There are va
 Files in HDFS are append-only and can only be written to by a single writer at a time. That is, once data is written it cannot be overwritten. This simplifies concurrency control and allows the system to guarantee that writes can be read as soon as a file is closed. On a write, a client must first query the NameNode to find which DataNodes and blocks to write. Then, the client will ensure a replicated write by sending packets of data through a pipeline of TCP connections. This pipeline includes all DataNodes over which the file will be replicated, which guarantees that the writes will be consistent across multiple DataNodes. On a read, a client must first query the NameNode to find which DataNodes contain replicas of the desired file and which blocks hold the file. Then, the client reads from the closest available DataNodes directly.
 
 \section{Limitations of Single-NameNode Architecture}
-
 Despite the benefits of having only a single NameNode, this architectural decision limits the scalability of HDFS. These problems are especially pronounced when HDFS is used to store many small files as opposed to few large files. In particular, a single file must be partitioned into at least one block, even if its entire contents are less than the block size. Thus even small files produce a block mapping of metadata. As a result, small files produce more metadata relative to their content size. This exhausts the available memory of the NameNode even for moderately sized data sets when they consist of many small files. For this same reason, small files result in larger block reports as each DataNode can hold a larger number of (virtual) blocks. Finally, the high-frequency access pattern associated with small files causes increased interaction with the NameNode, which creates another potential bottleneck.
 
 \subsection{Physical Memory Size}
@@ -166,16 +165,23 @@ We query HDFS using the Hadoop Java API. On top of the FileSystem class provided
 % What were the experiments testing?
 % What were the different parameters of the experiments?
 % Possibilities of error?
-\subsection{Experiment 1: Memory Bottleneck}
+\subsection{Experiment 1: Metadata Size}
 The first goal of our experiments is to determine precisely how much memory is occupied on the NameNode for each file added to the system. Analysis of the source code for HDFS and theoretical results in the literature suggest that each file should yield roughly 150 bytes of inode plus 150 bytes for each block to account for the mapping \cite{HdfsArch, HdfsScale}. However, the peculiarities of the NameNode storage for recovery suggest that these numbers are not precisely correct. The NameNode stores the FSImage, a snapshot of the filesystem, as well as an Edits log that indicates the updates since the last snapshot. Backups of each file are also maintained. Hence it is possible that as more files are added to the system, each additional file will result in more occupied memory on the NameNode. Moreover we seek to verify that the mapping for each block is fixed-size, whether or not the entire block is occupied by file contents.
 
 To test the size of metadata, we create a pool of HDFSClient threads and add large batches of files to HDFS (cf. MetadataSizeTest.java). We measure the resulting increase in occupied memory on the NameNode. We find that 
 % TODO: Insert the metadata size results with graphs.
 
+\subsection{Experiment 2: Reaching the Memory Bottleneck}
 % TODO: Check the reported memory bottleneck results.
-Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding files to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 112 MB of metadata. This discrepancy between 2 GB and 112 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 112 MB of heap memory. This can be reconfigured 
+Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding files to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 112 MB of metadata. This discrepancy between 2 GB and 112 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 112 MB of heap memory. This limit can be changed in the HDFS configuration and was set to its maximum value in our experiments given the size of our NameNode memory.
 
-\subsection{Experiment 2: CPU Experiments}
+We note that once the memory bottleneck is reached, HDFS does not refuse more files but rather the JVM fails on basic operations. For example, a query of the root directory (\texttt{hdfs dfs -ls /}) fails due to shortage of memory. So the file system is rendered unreadable unless files are removed.
+
+\subsection{Experiment 3: Read Throughput with Metadata}
+
+\subsection{Experiment 4: Write Throughput with Metadata}
+
+\subsection{Experiment 2: CPU Bottleneck}
 
 
 \subsection{Analysis}
