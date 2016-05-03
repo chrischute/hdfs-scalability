@@ -180,7 +180,7 @@ In this section we explore the memory bottleneck of HDFS. First we provide empir
 \subsubsection{Experiment 1: Metadata Size}\label{MetadataSize}
 The first goal of our experiments is to determine precisely how much memory is occupied on the NameNode for each file added to the system. Analysis of the source code for HDFS and theoretical results in the literature suggest that each file should yield roughly 150 bytes of inode plus 150 bytes for each block to account for the mapping \cite{HdfsArch, HdfsScale}. However, the peculiarities of the NameNode storage for recovery suggest that these numbers are not precisely correct. First, these numbers are based on an analysis of the source code rather than empirical results. It is possible that the memory footprint of each file extends beyond explicit storage of the (inode, mapping) pair. Second, the NameNode stores the FSImage, a snapshot of the filesystem, as well as an Edits log that indicates the updates since the last snapshot. Backups of each file are also maintained. Hence it is possible that as more files are added to the system, each additional file will result in more occupied memory on the NameNode. Moreover we seek to verify that the mapping for each block is fixed-size, whether or not the entire block is occupied by file contents.
 
-To test the size of metadata, we create a pool of HDFSClient threads and add large batches of files to HDFS (cf. MetadataSizeTest.java). We do this for files of varying size and measure the resulting increase in occupied memory on the NameNode. We find that each file accounts for a fixed 352 bytes of memory footprint, plus 175 bytes per block. In our analytical model above, this corresponds to values of $i = 352$ and $c = 175$. This is a significantly larger footprint than reported in \cite{HdfsScale}. However, our data does support the result that each block mapping is of fixed size and each additional block accounts for the same amount of additional metadata.
+To test the size of metadata, we create a pool of HDFSClient threads and add large batches of files to HDFS (cf. MetadataSizeTest.java). We do this for files of varying size and measure the resulting increase in occupied memory on the NameNode. We find that each file accounts for a fixed 352 bytes of memory footprint, plus 175 bytes per block. In our analytical model above, this corresponds to values of $i = 352$ and $c = 175$. This is a significantly larger footprint than reported in \cite{HdfsScale}. However, our data does support the result that each block mapping is of fixed size and each additional block accounts for the same amount of additional metadata. That is, the metadata footprint of a file on HDFS is linear in the number of blocks occupied by that file.
 
 \subsubsection{Experiment 2: Memory Bottleneck}\label{MemoryBottleneck}
 % TODO: Check the reported memory bottleneck results.
@@ -207,8 +207,11 @@ The design of the write throughput experiments mirrored the design of the read t
 \subsubsection{Experiment 5: Mixed Reads and Writes}\label{ReadWriteThroughput}
 A more typical usage pattern for HDFS would involve interleaved reads and writes. Therefore we ran experiments measuring throughput of HDFS mixed reads and writes as more files are added to the system. We note that it is possible that batch writes allow each DataNode in the pipeline to avoid disk seeks between writes. That is, assuming there is a large contiguous segment of free disk space available, the DataNode can write each new file sequentially without disk seeks. Thus Experiment 4 above would not show any decrease in throughput due to disk seeks. However, mixed (random) reads and writes would force each DataNode to seek on disk, so one might still expect to see performance degenerate as more small files are added.
 
-The results of our experiments showed that...
-% TODO: Read/write experimental results.
+The results of our experiments showed that there is no throughput degeneration as the number of files on HDFS is increased. As shown in the following figure, mixed reads and writes (at a read-to-write ratio of 4:1) produce approximately a weighted average of the throughout.
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{MixedThroughput}
+	\textit{Fig. 6: Mixed Read/Write Throughput vs. Files}
+\end{center}
 
 \subsubsection{Experiment 6: Frequent Requests}\label{FrequentRequests}
 % Discuss raw results independently for each experiment:
@@ -222,7 +225,7 @@ A dataset consisting of a large number of small files would likely receive a hig
 Our experimental setup was as follows. Again we used HDFSClient threads querying from multiple machines. We uploaded a large set of roughly 25,000 10-byte files to HDFS. The HDFSClients then randomly read these files to their local file system. We measured the throughput of these requests as the number of clients varied from a single connection thread and moving up to 64 HDFSClients. Each client made requests as quickly as possible, and we looked for a decrease in throughput as the NameNode received more concurrent read and write queries. This produced the following graph.
 \begin{center}
 	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ConcurrencyResults}	
-	\textit{Fig. 6: Read Throughput vs. Request Frequency}
+	\textit{Fig. 7: Read Throughput vs. Request Frequency}
 \end{center}
 We see that there is an initial spike in throughput as the utilization of the DataNodes increases to full capacity. In the case of reads, there is a slight decrease in the number of connections beyond 8. Importantly we do not observe a sharp decline in throughput. For writes, we see no decline whatsoever.
 
