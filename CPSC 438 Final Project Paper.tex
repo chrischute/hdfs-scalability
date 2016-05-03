@@ -178,11 +178,13 @@ Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by c
 We note that once the memory bottleneck is reached, HDFS does not refuse more files but rather the JVM fails on basic operations. For example, a query of the root directory (\texttt{hdfs dfs -ls /}) fails due to shortage of memory. So the file system is rendered unreadable unless files are removed.
 
 \subsection{Experiment 3: Read Throughput}
-We next tested the throughput of HDFS reads as more small files were added to the system. One might expect throughput to decrease as more files are added due to the increasing complexity of block mappings, as well as a wider range of disk seeks on the DataNode. In this experiment (found in ThroughputTest.java), the HDFSClient workers go through two stages: First we create a pool of worker threads and measure throughput while reading roughly 1000 random files from HDFS to the local file system. In the second stage, new workers add 25,000 files to the system. The worker threads are killed and the throughput is again measured with 25,000 additional files on the system.
+We next tested the throughput of HDFS reads as more small files were added to the system. One might expect throughput to decrease as more files are added due to the increasing complexity of block mappings, as well as a wider range of disk seeks on the DataNode. In this experiment (found in ThroughputTest.java), the HDFSClient workers go through two stages: First we create a pool of worker threads and measure throughput while reading roughly 1000 random files from HDFS to the local file system. In the second stage, new workers add 25,000 files to the system. The worker threads are killed and the throughput is again measured with 25,000 additional files on the system. This was repeated at increments of 25,000 files until the memory bottleneck was reached at roughly 234,000 files.
+
+We found that there was no decrease in throughput as more files were added. This supports the HDFS design assumption that metadata operations are relatively inexpensive. Moreover, it does not support the hypothesis that disk seeks on random file access are more expensive when more files were added.
 
 \subsection{Experiment 4: Write Throughput}
 
-\subsection{Experiment 2: CPU Bottleneck}
+\subsection{Experiment 5: CPU Bottleneck}
 
 
 \subsection{Analysis}
