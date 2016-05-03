@@ -231,14 +231,14 @@ We see that there is an initial spike in throughput as the utilization of the Da
 These results show only that the scalability of reads and writes is not linear. That is, there is some bottleneck achieved around 8 connections. However, we expected that this bottleneck is not due to NameNode processing but rather in disk I/O and network communication between the DataNodes. To test this hypothesis, we ran the same test but only requested the block \textit{locations}. Thus the read and write requests never reached the DataNodes. This produced the following graph.
 % TODO: Experiment where we only request the block locations.
 
-\section{Improvements to Single NameNode Architecture}\label{Improvements}
+\section{Improvements to HDFS}\label{Improvements}
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
 % -------------------------------------------------
 % Would it be helpful to remove the assumption that each file is assigned to its own block? Could be done with intermediate layer that puts small files into larger file, prevents edits
 
 Some improvements have been suggested to solve the scalability problems with HDFS. One attempt to address the memory bottleneck is Apache's HDFS Federation. This system modifies HDFS by creating multiple NameNodes each of which has its own separate namespace \cite{Federation}. This is not a fundamental solution to the architectural problem, but rather merely adds more hardware to increase the memory bottleneck. Thus HDFS Federation is still a potentially inefficient use of memory on the NameNodes given a dataset of many small files. Additionally, with multiple independent namespaces the system cannot perform operations across the namespaces. Thus, the complexity of cross-partition transactions must be handled by the client application. The client can use symbolic links and client-side mount tables to make the multiple namespaces transparent to the user, so long as the client can tolerate higher request latency.
 
-Some other distributed file systems like CalvinFS have been designed to more fundamentally address the memory bottleneck of the singular NameNode \cite{CalvinFS}. 
+Some other distributed file systems like CalvinFS have been designed to more fundamentally address the memory bottleneck \cite{CalvinFS}. CalvinFS treats file metadata similar to any other data in a distributed database system. It transforms operations on file metadata into distributed transactions as outlined by the Calvin database system. In this way, CalvinFS supports scalable metadata management. However, many users would prefer to have an open-source solution 
 
 One potential new solution would be to add an intermediate layer if you knew that you had many small files that would only be written once and never appended. 
 EXPLAIN THIS.
