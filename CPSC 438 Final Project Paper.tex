@@ -183,18 +183,21 @@ Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by c
 
 We note that once the memory bottleneck is reached, HDFS does not refuse more files but rather the JVM fails on basic operations. For example, a query of the root directory (\texttt{hdfs dfs -ls /}) fails due to shortage of memory. So the file system is rendered unreadable unless files are removed.
 
-\subsection{Throughput Experiments}
+\subsection{CPU Bottleneck Experiments}\label{CPUBottleneck}
 In this section we test the throughput of file operations as more files are added to HDFS. We analyze different request patterns to determine the performance bottleneck. We note that the small size of our cluster makes our results on throughput less convincing. That is, because there are only three DataNodes for the NameNode to monitor, there is relatively little block report processing on the NameNode CPU. Nonetheless, we can still add a large number of blocks and analyze throughput of HDFS near the memory limit.
 \subsubsection{Experiment 3: Read Throughput}\label{ReadThroughput}
-We next tested the throughput of HDFS reads as more small files were added to the system. One might expect throughput to decrease as more files are added due to the increasing complexity of block mappings, as well as a wider range of disk seeks on the DataNode. In this experiment (found in ThroughputTest.java), the HDFSClient workers go through two stages: First we create a pool of worker threads and measure throughput while reading roughly 1000 random files from HDFS to the local file system. In the second stage, new workers add 25,000 files to the system. The worker threads are killed and the throughput is again measured with 25,000 additional files on the system. This was repeated at increments of 25,000 files until the memory bottleneck was reached at roughly 234,000 files.
+We next tested the throughput of HDFS reads as more small files were added to the system. One might expect throughput to decrease as more files are added due to the increasing complexity of block mappings, as well as a wider range of disk seeks on the DataNode. In this experiment (found in ThroughputTest.java), there is a pool of 64 HDFSClient workers on three different machines. The workers go through two stages: First we create a pool of worker threads and measure throughput while reading roughly 1000 random files from HDFS to the local file system. In the second stage, new workers add 25,000 files to the system. The worker threads are killed and the throughput is again measured with 25,000 additional files on the system. This was repeated at increments of 25,000 files until the memory bottleneck was reached at roughly 234,000 files.
 
-We found that there was no decrease in throughput as more files were added. This supports the HDFS design assumption that metadata operations are inexpensive relative to other file system and network operations of HDFS. Moreover, it does not support the hypothesis that disk seeks on random file access are more expensive when more files were added.
-% TODO: Insert graphs for read throughput.
+We found that there was no decrease in throughput as more files were added. As shown in Figure 4, the read throughput hovered around 100 files per second. This supports the HDFS design assumption that metadata operations are inexpensive relative to other file system and network operations of HDFS. Moreover, it does not support the hypothesis that disk seeks on random file access are more expensive when more files were added.
 
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{ThroughputResults}	
+	\textit{Fig. 4: Isolated Read/Isolated Write Throughput}
+\end{center}
 \subsubsection{Experiment 4: Write Throughput}\label{WriteThroughput}
 Although read throughput was not affected by the number of files stored on the cluster, we posited that write throughput may still be affected. While reads need only query a single DataNode, writes must be replicated down a pipeline of $R$ DataNodes, where $R$ is the replication factor (here $R = 3$). Hence write operations involve  all DataNodes in our cluster. Each DataNode must perform a disk seek to a free location in physical memory, and HDFS cannot select the least busy DataNode to service a request.
 
-The design of the write throughput experiments mirrored the design of the read throughput test. Our experiments showed no decrease in write throughput as more files are added to HDFS.
+The design of the write throughput experiments mirrored the design of the read throughput test. As seen in Figure 4 above, our experiments showed no decrease in write throughput as more files are added to HDFS. The write throughput hovered around 80 files per second over the entire range of 0 to 225,000 files on the cluster.
 % TODO: Insert graphs for write throughput.
 
 \subsubsection{Experiment 5: Mixed Reads and Writes}\label{ReadWriteThroughput}
@@ -203,18 +206,17 @@ A more typical usage pattern for HDFS would involve interleaved reads and writes
 The results of our experiments showed that...
 % TODO: Read/write experimental results.
 
-\subsection{CPU Bottleneck Experiments}
 \subsubsection{Experiment 6: High-Frequency Requests}\label{HighFrequencyRequests}
 % Discuss raw results independently for each experiment:
 % Are these results what was expected (and why)?
 % If there was some error, discuss what may have caused it
 % Graphs
-
 % Evaluate experimental results holistically to pinpoint the problem with HDFS's Single Namenode architecture (I.e. weigh CPU and Memory problems against each other)
-
 % -------------------------------------------------
+A dataset consisting of a large number of small files would likely receive a higher frequency of queries than another dataset. A typical client will read a file, process that file's data, then request the next file. Small files will be processed at the client more quickly than large files, therefore one would expect the client to have a higher frequency of requests. Since each request must first query the NameNode for a block mapping, this will put a large strain on the NameNode. In this section we explore the possibility that this usage pattern associated with small files results in a bottleneck.
 
-\section{Improvements to Single NameNode Architecture}
+
+\section{Improvements to Single NameNode Architecture}\label{Improvements}
 
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
 
