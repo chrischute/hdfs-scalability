@@ -54,7 +54,7 @@ Distributed filesystems (DFS), also known as network filesystems, stores remote 
 
 The DFS architecture has many advantages; it offers a unified hierarchical namespace for shared files and folders, location transparency in physical data placement, load balancing across nodes, storage scalability via expanding clusters, increased availability through distributed data, and fault tolerance by replication across racks.
 
-Many DFS implementations exist today. Each system differs in their performance, data mutability, handling of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFSs like Hadoop Distributed File System.
+Many DFS implementations exist today. Each system differs in their performance, data mutability, management of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFSs like Hadoop Distributed File System.
 
 This paper examines Hadoop Distributed File System (HDFS), a module of the Apache Hadoop ecosystem. HDFS is a distributed filesystem focused on scalability and portability. HDFS is not fully POSIX-compliant since it is specifically designed for handling large files terabytes in size. It trades the POSIX functionality like mutable files for increasing data throughput and supporting operations like Append.
 
