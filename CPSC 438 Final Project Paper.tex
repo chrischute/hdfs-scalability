@@ -227,10 +227,10 @@ The results of our experiments showed that...
 % mention HDFS federation, CalvinFS
 % 
 
-Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces. If the use can guarantee that there will not be cross-partition transaction that must access files on multiple NameNodes, this partitioning can increase the memory limit. However, this is more of a quick fix than a solution to the underlying architectural problem. 
+Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces \cite{Federation}. If the use can guarantee that there will not be cross-partition transaction that must access files on multiple NameNodes, this partitioning can increase the memory limit. However, this is more of a quick fix than a solution to the underlying architectural problem. 
 
-Some other distributed file systems like CalvinFS have been designed to fix this problem in a more holistic way. EXPLAIN THIS 
-% TODO: Cite HDFS Federation and CalvinFS.
+Some other distributed file systems like CalvinFS have been designed to fix this problem in a more holistic way \cite{CalvinFS}. EXPLAIN THIS 
+
 
 One potential new solution would be to add an intermediate layer if you knew that you had many small files that would only be written once and never appended. 
 EXPLAIN THIS.
