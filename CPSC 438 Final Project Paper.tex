@@ -158,9 +158,11 @@ With these potential CPU bottlenecks in mind, we pose the question of whether it
 
 \section{Performance Evaluation}
 % Goals of the experiments
-In this section we present our experimental results on the memory bottleneck and the CPU bottlenecks of HDFS. We evaluate HDFS 2.7.1 on a cluster consisting of four identical Amazon EC2 instances. 
+In this section we present our experimental results on the memory bottleneck and the CPU bottlenecks of HDFS. We evaluate HDFS 2.7.1 on a cluster consisting of four identical Amazon EC2 instances. Each instance has 8 GB of disk space, 2 GB of RAM, and a 3.3 GHz Intel Xeon processor. Three of these instances are dedicated as DataNodes, and one instance is the NameNode. Although this is a small amount of memory for a typical HDFS NameNode, the goals of our experiments are to analyze the performance of HDFS around the limits of memory. Thus we are concerned with the amount of metadata \textit{relative} to the capacity of the NameNode's memory, rather than the absolute amount of metadata. Our experimental results can be normalized to account for the memory capacity of the NameNode and the disk capacity of the DataNodes.
 
 % Mention experimental setup (EC2, Java Test Skeleton, # nodes, etc)
+We query HDFS using the Hadoop Java API. On top of the FileSystem class provided by the API, we implemented a class called HDFSClient. Each HDFSClient object is runnable, and represents a single client making file access or modification requests to the file system. On each machine querying the NameNode, we spin up a pool of threads, each of which wraps an HDFSClient and reads from a global thread-safe \textit{request queue}. The master thread (different in each experiment) generates requests and places them on the request queue for processing by the HDFSClient worker threads. Each client repeatedly removes a request from the queue, issues that request to the NameNode and waits for the subsequent response. Examples of requests include writing a file from the local file system to HDFS, reading a file from HDFS, and deleting a file from HDFS.
+
 
 % FOR EACH EXPERIMENT:
 % Discuss designs of individual experiments and their results
