@@ -237,7 +237,7 @@ These results show only that the scalability of reads and writes is not linear. 
 % Would it be helpful to remove the assumption that each file is assigned to its own block? Could be done with intermediate layer that puts small files into larger file, prevents edits
 % TODO: Mention HDFS federation, CalvinFS
 
-Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces \cite{Federation}. This is not a solution to the underlying architectural problem, but rather essentially creates multiple systems and throws more hardware at the problem. This is still a potentially inefficient use of memory on the NameNodes and 
+Some improvements have been suggested to solve the scalability problems with HDFS. Hadoop has provided the HDFS Federation, a solution which creates multiple NameNodes each of which has completely separate namespaces \cite{Federation}. This is not a solution to the underlying architectural problem, but rather essentially creates multiple systems and throws more hardware at the problem. This is still a potentially inefficient use of memory on the NameNodes. Additionally, with multiple independent namespaces the system cannot perform operations across the namespaces. Thus, the complexity of such transactions will be forced onto the client which can use symbolic links and client-side mount tables to make the multiple namespaces transparent to the user, but slower. 
 
 Some other distributed file systems like CalvinFS have been designed to fix this problem in a more holistic way \cite{CalvinFS}. EXPLAIN THIS 
 
