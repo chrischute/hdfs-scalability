@@ -56,18 +56,17 @@
 \thispagestyle{empty}
 \begin{multicols*}{2}
 \begin{abstract}
-    This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. The singular NameNode presents other theoretical bottlenecks when scaling for storage of a large number of small files. For example, small files create more complex heartbeats and are associated with more frequent access request, both of which increase the CPU load on the NameNode. In this paper we first model and provide experimental evidence for the NameNode memory bottleneck. We compare these results to proposed CPU bottlenecks, and we find that the memory bottleneck dominates in all reasonable usage patterns. We conclude with suggestions for future work on HDFS scalability limits.
+    This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. In addition, the singular NameNode presents possible CPU bottlenecks when scaling for storage of a large number of small files. For example, small files create more complex heartbeats and are associated with more frequent access requests, both of which increase the CPU load on the NameNode. In this paper we first model and provide experimental evidence for the NameNode memory bottleneck. We compare these results to proposed CPU bottlenecks, and we find that the memory bottleneck dominates in all reasonable usage patterns. We conclude with suggestions for future work on HDFS scalability limits.
 \end{abstract}
 
 \section{Introduction}
+% Distributed file systems (DFS), also known as network file systems, store remote files in a format accessible with the same semantics as a local file system. A DFS offers a transparent interface for handling files and directories, access control, recovery and concurrency. Additionally, a DFS offers a scalable mechanism for creating logical file systems shared by many clients.
 
-Distributed file systems (DFS), also known as network file systems, store remote files in a format accessible with the same semantics as a local file system. A DFS offers a transparent interface for handling files and directories, access control, recovery and concurrency. Additionally, a DFS offers a scalable mechanism for creating logical file systems shared by many clients.
+% The DFS architecture has many advantages: it offers a unified hierarchical namespace for shared files and folders, location transparency in physical data placement, load balancing across nodes, storage scalability via expanding clusters, increased availability through distributed data, and fault tolerance by replication across racks.
 
-The DFS architecture has many advantages: it offers a unified hierarchical namespace for shared files and folders, location transparency in physical data placement, load balancing across nodes, storage scalability via expanding clusters, increased availability through distributed data, and fault tolerance by replication across racks.
+% Many DFS implementations exist today. Each system differs in their performance, data mutability, management of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFSs like Hadoop Distributed File System.
 
-Many DFS implementations exist today. Each system differs in their performance, data mutability, management of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFSs like Hadoop Distributed File System.
-
-This paper examines Hadoop Distributed File System (HDFS), a module of the Apache Hadoop ecosystem. HDFS is a distributed file system focused on scalability and portability. HDFS is not fully POSIX-compliant, specifically designed for handling large files terabytes in size. It trades the POSIX functionality like mutable files for increasing data throughput and supporting operations like Append.
+This paper examines the scalability limits of the Hadoop Distributed File System (HDFS), a module of the Apache Hadoop ecosystem. HDFS is a distributed file system focused on scalability and portability. HDFS is not fully POSIX-compliant, specifically designed for handling large files terabytes in size. It trades the POSIX functionality like mutable files for increasing data throughput and supporting operations like Append.
 
 The architecture of HDFS is designed with the following goals in mind \cite{HdfsGuide}:
 \begin{enumerate}[noitemsep, label=\arabic*.]
@@ -82,16 +81,13 @@ HDFS's key characteristic is how it decouples metadata from file data. Although 
 
 The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5. Section 6 concludes.
 
-\end{multicols*}
-
-\begin{center}
-	\includegraphics[keepaspectratio=true, width=0.75\textwidth]{Architecture}\\
-	\textit{Fig. 1: Architecture of HDFS}
-\end{center}
-
-\begin{multicols*}{2}
 \section{HDFS Architecture}
 With these principles in mind, HDFS architecture is designed as follows. Much of the information in this section is adapted from \cite{HdfsArch}. A HDFS cluster consists of a single NameNode and many DataNodes. The NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, a HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
+
+\begin{center}
+	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{Architecture}\\
+	\textit{Fig. 1: Architecture of HDFS}
+\end{center}
 
 Each file is partitioned into one or more blocks, and each block is replicated across multiple DataNodes. The mapping for a file maintains a list of where each block is placed or replicated to. As presented in Section \ref{MetadataSize}, the size of metadata objects associated with each file scales linearly with the number of blocks in each file. That is, there is a fixed size mapping for each block in the file. The NameNode holds all of this metadata in memory to facilitate fast metadata operations.
 
