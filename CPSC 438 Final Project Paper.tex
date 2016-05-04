@@ -38,16 +38,26 @@
 \cfoot{\thepage}
 \graphicspath{{images/}}
 
+\renewenvironment{abstract}
+ {\small
+  \begin{center}
+  \bfseries \abstractname\vspace{-.5em}\vspace{0pt}
+  \end{center}
+  \list{}{%
+    \setlength{\leftmargin}{0mm}% <---------- CHANGE HERE
+    \setlength{\rightmargin}{\leftmargin}%
+  }%
+  \item\relax}
+ {\endlist}
+
 % ************************* End of Preamble ***********************
 \begin{document}
 \maketitle
 \thispagestyle{empty}
-
-\begin{abstract}
-    This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. This architecture presents other theoretical bottlenecks, including CPU load on the NameNode from storing many small files. For example, both high-frequency requests and heartbeats with small files require higher NameNode CPU usage. In this paper we model and provide experimental evidence for the NameNode memory bottleneck. We compare this to proposed CPU bottlenecks, and we find that the memory bottleneck is the dominant issue. We provide suggestions for future work on HDFS scalability limits.
-\end{abstract}
 \begin{multicols*}{2}
-
+\begin{abstract}
+    This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. The singular NameNode presents other theoretical bottlenecks when scaling for storage of a large number of small files. For example, small files create more complex heartbeats and are associated with more frequent access request, both of which increase the CPU load on the NameNode. In this paper we first model and provide experimental evidence for the NameNode memory bottleneck. We compare these results to proposed CPU bottlenecks, and we find that the memory bottleneck dominates in all reasonable usage patterns. We conclude with suggestions for future work on HDFS scalability limits.
+\end{abstract}
 
 \section{Introduction}
 
