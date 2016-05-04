@@ -36,6 +36,7 @@
 %\rhead{\theauthor\\\duedate}
 %\rfoot{}
 \cfoot{\thepage}
+\graphicspath{{images/}}
 
 % ************************* End of Preamble ***********************
 \begin{document}
@@ -161,7 +162,7 @@ The first goal of our experiments is to determine precisely how much memory is o
 To test the size of metadata, we create a pool of HDFSClient threads and add large batches of files to HDFS (cf. MetadataSizeTest.java). We do this for files of varying size and measure the resulting increase in occupied memory on the NameNode. We find that each file accounts for a fixed 352 bytes of memory footprint, plus 175 bytes per block. In our analytical model above, this corresponds to values of $i = 352$ and $c = 175$. This is a significantly larger footprint than reported in \cite{HdfsScale}. However, our data does support the result that each block mapping is of fixed size and each additional block accounts for the same amount of additional metadata. That is, the metadata footprint of a file on HDFS is linear in the number of blocks occupied by that file.
 
 \subsubsection{Experiment 2: Memory Bottleneck}\label{MemoryBottleneck}
-Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding small files (10 B each) to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 112 MB of metadata. This discrepancy between 2 GB and 112 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 112 MB of heap memory. This limit can be changed in the HDFS configuration and was set to its maximum value in our experiments given the size of our NameNode memory.
+Next we pushed our HDFS cluster to the memory bottleneck. This was achieved by continually adding small files (10 B each) to the HDFS cluster until the write requests were refused. We found that our 2 GB NameNode could support roughly 234,000 10-byte files, accounting for approximately 123.3 MB of metadata. This discrepancy between 2 GB and 123.3 MB exists because the HDFS NameNode must run the Java Virtual Machine as well as a version of Linux. Thus the metadata storage was restricted to 128 MB of heap memory. This limit can be changed in the HDFS configuration and was set to its maximum value in our experiments given the size of our NameNode memory.
 
 We note that once the memory bottleneck is reached, HDFS does not refuse more files but rather the JVM fails on basic operations. For example, a query of the root directory (\texttt{hdfs dfs -ls /}) fails due to shortage of memory. So the file system is rendered unreadable unless files are removed.
 
@@ -197,6 +198,7 @@ The results of our experiments showed that there is no throughput degeneration a
 % Graphs
 % Evaluate experimental results holistically to pinpoint the problem with HDFS's Single Namenode architecture (I.e. weigh CPU and Memory problems against each other)
 % -------------------------------------------------
+% TODO: Fix the throughput vs. connections test. Possibly remove it.
 A dataset consisting of a large number of small files would likely receive a higher frequency of queries than another dataset. A typical client will read a file, process that file's data, then request the next file. Small files will be processed at the client more quickly than large files, therefore one would expect the client to have a higher frequency of requests. Since each request must first query the NameNode for a block mapping, this will put a large strain on the NameNode. In this section we explore the possibility that this usage pattern associated with small files results in a bottleneck.
 
 Our experimental setup was as follows. Again we used HDFSClient threads querying from multiple machines. We uploaded a large set of roughly 25,000 10-byte files to HDFS. The HDFSClients then randomly read these files to their local file system. We measured the throughput of these requests as the number of clients varied from a single connection thread and moving up to 64 HDFSClients. Each client made requests as quickly as possible, and we looked for a decrease in throughput as the NameNode received more concurrent read and write queries. This produced the following graph.
@@ -208,13 +210,8 @@ We see that there is an initial spike in throughput as the utilization of the Da
 
 These results show only that the scalability of reads and writes is not linear. That is, there is some bottleneck achieved around 8 connections. However, we expected that this bottleneck is not due to NameNode processing but rather in disk I/O and network communication between the DataNodes. To test this hypothesis, we ran the same test but only requested the block \textit{locations}. Thus the read and write requests never reached the DataNodes. This produced the following graph.
 
-% TODO: Experiment where we only request the block locations.
-
 \subsubsection{Experiment 7: Internal Load}\label{internal}
-
-To see the internal load created by the heartbeats, we checked the CPU load on an idle system with different amounts of files on the system. For our very small system, we were not able to put enough files on the servers to notice any uptick in CPU load from the heartbeats. Essentially, the limit of the memory of the NameNode dominated this potential bottleneck so thoroughly that we were not able to even see any substantive change in CPU load when the memory limit was reached. This could be because our system had only three DataNodes, and thus received only three heartbeats. We saw about a $ .3\% $ CPU usage from each node, so with thousands of nodes this could become a bottleneck, but not in our system. 
-
-
+To see the internal load created by the heartbeats, we checked the CPU load on an idle system with different amounts of files on the system. For our very small system, we were not able to put enough files on the servers to notice any uptick in CPU load from the heartbeats. Essentially, the limit of the memory of the NameNode dominated this potential bottleneck so thoroughly that we were not able to even see any substantive change in CPU load when the memory limit was reached. This could be because our system had only three DataNodes, and thus received only three heartbeats. We saw about a $ .3\% $ CPU usage from each node, so with thousands of nodes this could become a bottleneck, but not in our system.
 
 \section{Improvements to HDFS}\label{Improvements}
 % Use experimental data to determine what is actually detrimental to performance of HDFS, and suggest a way to improve it
