@@ -66,26 +66,26 @@
 
 % Many DFS implementations exist today. Each system differs in their performance, data mutability, management of concurrent writes, failure handling, and storage policies. These include POSIX-compliant systems like Lustre, search-engine enhanced Google File System (GFS), and non-proprietary open-source DFSs like Hadoop Distributed File System.
 
-This paper examines the scalability limits of the Hadoop Distributed File System (HDFS), a module of the Apache Hadoop ecosystem. HDFS is a distributed file system focused on scalability and portability. HDFS is not fully POSIX-compliant, specifically designed for handling large files terabytes in size. It trades the POSIX functionality like mutable files for increasing data throughput and supporting operations like Append.
+This paper examines the scalability limits of the Hadoop Distributed File System (HDFS), a module of the Apache Hadoop ecosystem. HDFS is a distributed file system focused on scalability and portability. HDFS is not a POSIX-compliant file system in that it trades some POSIX requirements such as mutable files to increase the throughput and concurrency of distributed reads.
 
 The architecture of HDFS is designed with the following goals in mind \cite{HdfsGuide}:
-\begin{enumerate}[noitemsep, label=\arabic*.]
+\begin{enumerate}[leftmargin=0cm,itemindent=.5cm,labelwidth=\itemindent,labelsep=0cm,align=left,label=\arabic*.]
 	\item\textit{Support regular hardware failures.} Data is replicated across multiple DataNodes for fault tolerance.
 	\item\textit{Allow streaming data access.} Partitioning is transparent so that files appear to be stored sequentially. Reads are distributed so that streaming access does not block other transactions.
-	\item\textit{Support very large data sets.} To provide scalability, more DataNodes can be added to support large data sets. This assumes that the NameNode memory limit will not become a bottleneck before the disk space of the DataNodes.
-	\item\textit{Provide simple concurrency control.} In HDFS's write-once, read-many model, only one appender/creator per file is allowed at a given time. Written data is immutable. This allows HDFS to provide highly available and concurrent reads.
-	\item\textit{Run everywhere (portability).} HDFS runs on top of the Java Virtual Machine, which provides nearly universal portability.
+	\item\textit{Support very large data sets.} To increase the file system's storage capacity, more machines can be added to an HDFS cluster. Importantly, this assumes that the NameNode memory bottleneck (discussed in Section \ref{ScalabilityLimits}) has not been reached.
+	\item\textit{Provide simple concurrency control.} In the write-once, read-many model of HDFS, only one appender/creator per file is allowed at a given time. Written data is immutable. This allows HDFS to provide highly available, concurrent reads.
+	\item\textit{Universal portability.} HDFS runs on top of the Java Virtual Machine, and thus can be run on any architecture and operating system that supports the JVM.
 \end{enumerate}
 
-HDFS's key characteristic is how it decouples metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
+One key design choice of HDFS is the decoupling of metadata from file data. Although its centralized namespace storage offers several advantages for linear performance scaling, it also introduces hard bounds for growth. This paper explores how these limitations occur, analyzes its objective effects on performance, and discusses potential approaches to overcoming this limit.
 
-The rest of this paper is organized as follows. In section 2, we outline the architecture of a HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with the system's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, followed by proposals on ways to improve performance in Section 5. Section 6 concludes.
+The rest of this paper is organized as follows. In Section 2, we outline the architecture of an HDFS cluster. Section 3 provides a high-level overview of how this architecture interferes with an HDFS cluster's performance. Section 4 discusses the design and analysis of various experiments conducted on an HDFS cluster, and in Section 5 techniques are proposed for improving performance. Section 6 concludes.
 
 \section{HDFS Architecture}
-With these principles in mind, HDFS architecture is designed as follows. Much of the information in this section is adapted from \cite{HdfsArch}. A HDFS cluster consists of a single NameNode and many DataNodes. The NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, a HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
+With the above principles in mind, the architecture of HDFS is designed as follows. Much of the information in this section is adapted from \cite{HdfsArch}. An HDFS cluster consists of a single NameNode and many DataNodes. The NameNode holds the metadata for each file in the file system. Metadata for a directory consists of an inode, and metadata for a file consists of an (inode, mapping) pair. The inode is a UNIX-style inode and thus contains properties such as permissions and ownership. Moreover, a HDFS inode stores HDFS-specific attributes such as quotas and replication factors.
 
 \begin{center}
-	\includegraphics[keepaspectratio=true, width=0.45\textwidth]{Architecture}\\
+	\includegraphics[keepaspectratio=true, width=0.48\textwidth]{Architecture}\\
 	\textit{Fig. 1: Architecture of HDFS}
 \end{center}
 
