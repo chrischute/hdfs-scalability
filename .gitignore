@@ -2,4 +2,6 @@
 *.aux
 *.log
 .texpadtmp/*
+.DS_Store
 .DS_STORE
+*.synctex.gz
