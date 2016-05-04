@@ -238,6 +238,8 @@ Finally, there are multiple modifications that could be made to HDFS to reduce t
 A more fruitful approach may be to simplify the scheme for mappings to reduce the amount of metadata needed to map each block to a list of DataNodes. However, this is least feasible for small files, since there is a larger potential domain of distinct blocks to map to DataNodes. That is, smaller and more numerous files imply that each mapping must potentially represent more distinct blocks and DataNode locations. Thus more bits will be needed even by an optimally efficient scheme.
 \section{Conclusion}
 This paper has presented and experimented on the scalability limits of HDFS for storing small files. We presented an analytical model of the NameNode memory bottleneck, and we provided a precise measurement of the memory footprint of each file on the NameNode. We confirmed that the single-NameNode architecture is indeed a bottleneck of HDFS. While this result had been previously presented in \cite{HdfsScale} and elsewhere, we showed that the NameNode's memory limitations dominate potential CPU bottlenecks in all reasonable usage patterns. We showed that read-only, write-only, and mixed read-write workloads are unaffected by the number of files stored on an HDFS cluster. This suggests that there is negligible CPU load on the NameNode caused by increased block report complexity and a greater metadata space. Finally we showed that even a high frequency of requests for small files does not cause the NameNode CPU to be a bottleneck. Rather, the NameNode memory bottleneck is the dominant bottleneck in all usage patterns.
+
+\clearpage
 \bibliographystyle{plain}
 \bibliography{citations.bib}
 \end{multicols*}
