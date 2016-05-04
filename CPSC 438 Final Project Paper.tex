@@ -56,7 +56,7 @@
 \thispagestyle{empty}
 \begin{multicols*}{2}
 \begin{abstract}
-    This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. In addition, the singular NameNode presents possible CPU bottlenecks when scaling for storage of a large number of small files. For example, small files create more complex heartbeats and are associated with more frequent access requests, both of which increase the CPU load on the NameNode. In this paper we first model and provide experimental evidence for the NameNode memory bottleneck. We compare these results to proposed CPU bottlenecks, and we find that the memory bottleneck dominates in all reasonable usage patterns. We conclude with suggestions for future work on HDFS scalability limits.
+    This paper explores the scalability limits of the Hadoop Distributed File System (HDFS). The single-machine, in-memory metadata store of HDFS is a known bottleneck for applications requiring storage of many small files. In addition, the singular NameNode presents possible CPU bottlenecks when scaling for storage of a large number of small files. For example, small files create more complex heartbeats and are associated with more frequent access request patterns, both of which increase the CPU load on the NameNode. In this paper we first model and provide experimental evidence for the NameNode memory bottleneck. We compare these results to proposed CPU bottlenecks, and we find that the memory bottleneck dominates in all reasonable usage patterns. We conclude with suggestions for future work on HDFS scalability limits.
 \end{abstract}
 
 \section{Introduction}
