@@ -1,6 +1,10 @@
-/* Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur */
-/* CPSC 433 - Databases */
-/* May 2, 2016 */
+/**
+ * MetadataSizeTest.java
+ * Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur
+ * 
+ * Determine the average metadata footprint of files on HDFS.
+ * Determine whether the metadata size depends on file content size.
+ */
 
 import java.io.File;
 import java.io.IOException;
@@ -22,9 +26,9 @@ public class MetadataSizeTest {
         LinkedList<String> requestQ = new LinkedList<String>();
         Thread[] threadPool = new Thread[NUM_CLIENT_THREADS];
 
-        // spin up HDFSClient threads
+        // spin up HdfsClient threads
         for (int j = 0; j < NUM_CLIENT_THREADS; ++j) {
-            threadPool[j] = new Thread(new HDFSClient(requestQ));
+            threadPool[j] = new Thread(new HdfsClient(requestQ));
             threadPool[j].start();
         }
 

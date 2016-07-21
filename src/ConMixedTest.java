@@ -1,6 +1,10 @@
-/* Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur */
-/* CPSC 433 - Databases */
-/* May 2, 2016 */
+/**
+ * MetadataSizeTest.java
+ * Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur
+ * 
+ * ConMixedTest.java
+ * Measure HDFS throughput with high concurrency of mixed reads and writes.
+ */
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +18,8 @@ public class ConMixedTest {
     private static final boolean _DEBUG = false;
     private static final int MAX_NUM_THRUPUT_THREADS = 16;
     private static final int NUM_TRIALS = 10;
-    private static final int NUM_THRUPUT_FILES = 500;    // number files for xput test
-    private static final double PROB_READ = 0.8;      // probability that the mixed test performs a read (0.2 is prob is makes a write)
+    private static final int NUM_THRUPUT_FILES = 500; // number files for xput test
+    private static final double PROB_READ = 0.8;      // probability that  mixed test performs a read (1-p is prob. of write)
     private static final String LOCAL_READ_DIR = "/usr/local/hadoop/test/read";     // contains names to read from server
     private static final String HDFS_READ_DIR = "/read/";                           // HDFS path from which to read
     private static final String LOCAL_WRITE_DIR = "/usr/local/hadoop/test/tmp10B";  // contains files to randomly add to server

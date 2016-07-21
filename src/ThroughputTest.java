@@ -1,6 +1,10 @@
-/* Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur */
-/* CPSC 433 - Databases */
-/* May 2, 2016 */
+/**
+ * ThroughputTest.java
+ * Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur
+ * 
+ * Measure the throughput of reads and writes separately as the number
+ * of small files on HDFS varies.
+ */
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +57,7 @@ public class ThroughputTest {
 
             // start thread pool to carry out read requests
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             Long startTime = System.currentTimeMillis();
@@ -87,7 +91,7 @@ public class ThroughputTest {
             System.err.println("(2b) starting throughput measurement");
             // start thread pool to carry out read requests
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             startTime = System.currentTimeMillis();
@@ -115,7 +119,7 @@ public class ThroughputTest {
             }
             // wait for threads to clean up HDFS
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
@@ -148,7 +152,7 @@ public class ThroughputTest {
             }
             System.err.println("Done adding requests to queue");
             for (int j = 0; j < NUM_WRITE_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             // wait for all threads to finish, then measure throughput

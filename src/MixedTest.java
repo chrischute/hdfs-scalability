@@ -1,6 +1,10 @@
-/* Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur */
-/* CPSC 433 - Databases */
-/* May 2, 2016 */
+/**
+ * MixedTest.java
+ * Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur
+ * 
+ * Measure throughput of mixed reads and writes as the number of small
+ * files on HDFS varies.
+ */
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +20,7 @@ public class MixedTest {
     private static final int NUM_THRUPUT_THREADS = 8;
     private static final int NUM_TRIALS = 99;
     private static final int NUM_WRITES = 1000;
-    private static final int NUM_THRUPUT_FILES = 500;    // number files for xput test
+    private static final int NUM_THRUPUT_FILES = 500; // number files for xput test
     private static final double PROB_READ = 0.8;      // probability that the mixed test performs a read (0.2 is prob is makes a write)
     private static final String LOCAL_READ_DIR = "/usr/local/hadoop/test/read";     // contains names to read from server
     private static final String HDFS_READ_DIR = "/read/";                           // HDFS path from which to read
@@ -58,7 +62,7 @@ public class MixedTest {
 
             // start thread pool to carry out mixed read/writ requests
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             Long startTime = System.currentTimeMillis();
@@ -86,7 +90,7 @@ public class MixedTest {
             }
             // wait for threads to clean up HDFS
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
@@ -119,7 +123,7 @@ public class MixedTest {
             }
             System.err.println("Done adding requests to queue");
             for (int j = 0; j < NUM_WRITE_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             // wait for all threads to finish, then measure throughput

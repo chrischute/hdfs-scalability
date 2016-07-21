@@ -1,6 +1,10 @@
-/* Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur */
-/* CPSC 433 - Databases */
-/* May 2, 2016 */
+/**
+ * ConcurrencyTest.java
+ * Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur
+ *
+ * Measure HDFS throughput via calls to getBlockLocations.
+ * Measured on load of many small files.
+ */
 
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +18,9 @@ public class ConcurrencyTest {
     private static final boolean _DEBUG = false;
     private static final int NUM_THRUPUT_THREADS = 16;
     private static final int NUM_TRIALS = 15;
-    private static final int NUM_THRUPUT_FILES = 500;    // number files for xput test
-    private static final String LOCAL_READ_DIR = "/usr/local/hadoop/test/read";     // contains names to read from server
-    private static final String HDFS_READ_DIR = "/read/";                           // HDFS path from which to read
+    private static final int NUM_THRUPUT_FILES = 500;                           // number files for xput test
+    private static final String LOCAL_READ_DIR = "/usr/local/hadoop/test/read"; // contains names to read from server
+    private static final String HDFS_READ_DIR = "/read/";                       // HDFS path from which to read
 
     // prints out throughput by trial in CSV format
     public static void main(String[] args) {
@@ -26,7 +30,6 @@ public class ConcurrencyTest {
         // run NUM_TRIALS trials
         for (int i = 1; i <= NUM_TRIALS; ++i) {
             System.out.print(i + ",");
-            // STEP 1: throughput measurement test
             // test throughput via the getBlockLocations call
             System.err.println("(1) BlockSize Throughput (trial " + i + ")");
             System.err.println("(1a) filling read request queue");
@@ -47,7 +50,7 @@ public class ConcurrencyTest {
             System.err.println("(1b) starting throughput measurement");
             // start thread pool to carry out read requests
             for (int j = 0; j < NUM_THRUPUT_THREADS; ++j) {
-                threadPool[j] = new Thread(new HDFSClient(requestQ));
+                threadPool[j] = new Thread(new HdfsClient(requestQ));
                 threadPool[j].start();
             }
             Long startTime = System.currentTimeMillis();
@@ -63,7 +66,7 @@ public class ConcurrencyTest {
             Long endTime = System.currentTimeMillis();
             Double totalTime = 1.0 * (endTime - startTime) / 1000;
             System.out.println(String.format("%.4f", 1.0 * (NUM_THRUPUT_FILES / totalTime)));
-        } // END TRIAL LOOP
+        }
 
         return;
     }

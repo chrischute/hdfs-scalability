@@ -1,9 +1,11 @@
-/* Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur */
-/* CPSC 433 - Databases */
-/* May 2, 2016 */
-
-/* REFERENCE: adapted from "https://linuxjunkies.wordpress.com/2011/11/21/a- */
-/* hdfsclient-for-hadoop-using-the-native-java-api-a-tutorial/" */
+/**
+ * HdfsClient.java
+ * Christopher Chute, David Brandfonbrener, Leo Shimonaka, Matt Vasseur
+ * 
+ * Base client for create, read, update, delete operations to HDFS. 
+ * Used in all throughput tests.
+ * REFERENCE: Adapted from http://tinyurl.com/hdfs-java-api
+ */
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -26,11 +28,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 
-public class HDFSClient implements Runnable {
+public class HdfsClient implements Runnable {
     private Queue<String> requestQ;
     private volatile boolean isStopped;
 
-    public HDFSClient(final Queue<String> requestQ) {
+    public HdfsClient(final Queue<String> requestQ) {
         this.requestQ = requestQ;
         isStopped = false;
     }
